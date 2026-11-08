@@ -2898,6 +2898,7 @@ function tapOnTouch(e){
   if(!e.isPrimary && !pixLoneTouch(e)) return;
   var el = e.target && e.target.closest ? e.target.closest("[onclick]") : null;
   if(!el || el.disabled || el.getAttribute("aria-disabled") === "true" || el.classList.contains("disabled")) return;
+  if(el.hasAttribute("data-real")) return;   // (2026-11-08, per Dan) the SHARE buttons: the phone opens its share sheet only for the finger's own tap, not for a click made 0.1 s later by a timer, so the real click is left alone and goes straight to the button
   var pd = el.getAttribute("onpointerdown"), m = pd && TAP_SOUND_ONLY.exec(pd);
   if(pd && !m) return;                       // it acts on the touch by itself
   if(pixAudioStale){ var nm = m && /^\s*['"](\w+)['"]\s*$/.exec(m[1]); tapHeldSound = nm ? nm[1] : "tap"; }
@@ -12636,8 +12637,8 @@ function shareDo(kind, id, where){
 function shareBtnHtml(kind, id, where, label, fit){
   window.pixSt(function(){ shareWarm(kind, id); }, 60);          // (it was 300 ms: the card is drawn as soon as the screen is up, so it is more often ready by the tap)
   var js = "shareTap('" + kind + "'," + (id ? "'" + id + "'" : "null") + ",'" + where + "')";
-  if(!fit) return pixBtnHtml(label || t("shareBtn"), js, true);
-  return '<button class="btn pixBtn secondary ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();' + js + '">' + (label || t("shareBtn")) + '</button>';      // (the same size as INSTALL THE APP, under it on the Options screen)
+  if(!fit) return pixBtnHtml(label || t("shareBtn"), js, true).replace("<button ", '<button data-real="1" ');          // data-real: the tap is not made again by the glow timer (see tapOnTouch)
+  return '<button data-real="1" class="btn pixBtn secondary ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();' + js + '">' + (label || t("shareBtn")) + '</button>';      // (the same size as INSTALL THE APP, under it on the Options screen)
 }
 function shareTap(kind, id, where){
   if(where === "award"){      // the badge screen leaves by itself after its 2.5 s: a player who shares keeps it until CONTINUE
@@ -12671,7 +12672,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT3";
+var APP_BUILD = "2026-11-08 IT4";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
