@@ -1,0 +1,33 @@
+{
+  "name": "Fe y Vida Quest (Italiano)",
+  "short_name": "Fe y Vida IT",
+  "description": "Missioni piene di fede per lo stand di Fe y Vida a NCYC 2026. Versione italiana.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#4FB0F2",
+  "theme_color": "#4FB0F2",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "icons/icon-192.png?v=EA",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png?v=EA",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png?v=EA",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

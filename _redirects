@@ -1,0 +1,4 @@
+# PostHog analytics goes through this site so phone ad blockers do not drop it (2026-11-03). US region; for the EU region use eu.i.posthog.com and eu-assets.i.posthog.com instead.
+/ingest/static/*  https://us-assets.i.posthog.com/static/:splat  200!
+/ingest/array/*   https://us-assets.i.posthog.com/array/:splat   200!
+/ingest/*         https://us.i.posthog.com/:splat                200!
