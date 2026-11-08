@@ -12561,8 +12561,10 @@ function shareCloud(ctx, cx, cy, u){
   ctx.fillStyle = "#DCEEFF"; ctx.fillRect(cx - 4 * u, cy + 3 * u, 8 * u, u);
 }
 // the picture card, 1080 x 1350: the pixel sky, the name of the game, a cream card with the badge (or the ticket, or a few badges for the app), and the address
+var shareBlobs = {};          // the cards that are finished (the picture itself), by the same key as shareCache
+function shareKey(pack){ return pack.kind + ":" + (pack.id || "") + ":" + (state.lang || "en") + ":" + (state.missions[pack.id] && state.missions[pack.id].full ? "f" : ""); }
 function shareCard(pack){
-  var key = pack.kind + ":" + (pack.id || "") + ":" + (state.lang || "en") + ":" + (state.missions[pack.id] && state.missions[pack.id].full ? "f" : "");
+  var key = shareKey(pack);
   if(shareCache[key]) return shareCache[key];
   var m = pack.id && shareGame(pack.id), W = 1080, H = 1350;
   var imgs = [];
@@ -12597,7 +12599,7 @@ function shareCard(pack){
     return new Promise(function(res, rej){ cv.toBlob(function(b){ if(b) res(b); else rej(new Error("no picture")); }, "image/png"); });
   });
   shareCache[key] = p;
-  p.catch(function(){ delete shareCache[key]; });
+  p.then(function(b){ shareBlobs[key] = b; }, function(){ delete shareCache[key]; });
   return p;
 }
 function shareWarm(kind, id){ try { shareCard(shareContent(kind, id)); } catch(e){} }          // drawn ahead, so the share sheet opens at the very moment of the tap
@@ -12618,17 +12620,21 @@ function shareDo(kind, id, where){
   track("share_tapped", {where: where, kind: pack.kind, mission_id: pack.id, full: !!(pack.id && state.missions[pack.id] && state.missions[pack.id].full)});
   var result = function(r){ track("share_result", {where: where, kind: pack.kind, mission_id: pack.id, result: r}); };
   var fail = function(e){ if(e && e.name === "AbortError"){ result("cancelled"); return; } shareCopy(pack, where); };     // the player closed the sheet: nothing more; any other trouble: the link is copied
-  return shareCard(pack).then(function(b){ return b; }, function(){ return null; }).then(function(blob){
-    var file = null;
-    try { if(blob) file = new File([blob], pack.file, {type: "image/png"}); } catch(e){}
-    if(!navigator.share){ shareCopy(pack, where); return; }
-    if(file && navigator.canShare && navigator.canShare({files: [file]}))
-      return navigator.share({files: [file], title: pack.title, text: pack.text + "\n" + pack.url}).then(function(){ result("shared"); }, fail);
-    return navigator.share({title: pack.title, text: pack.text, url: pack.url}).then(function(){ result("shared"); }, fail);
-  });
+  // (2026-11-08, per Dan: SHARE on the badge screen, while the confetti was flying, showed the COPY THIS LINK box instead of the iPhone's share sheet.) The iPhone opens its share sheet only when it is asked for at
+  // the moment of the tap. This used to wait for the picture card to be drawn first, and with the confetti running that took longer than the phone allows, so the request was refused and the link box came instead.
+  // Now the sheet is asked for at once: with the picture card if it is finished by now (it is drawn ahead, see shareWarm), and without the picture (the words and the link) if it is not; it is then drawn for the next tap.
+  var blob = shareBlobs[shareKey(pack)] || null;
+  if(!blob) shareWarm(kind, id);
+  var file = null;
+  try { if(blob) file = new File([blob], pack.file, {type: "image/png"}); } catch(e){}
+  if(!navigator.share){ shareCopy(pack, where); return Promise.resolve(); }
+  if(!blob) dbgLog("share: the picture card was not finished at the tap: shared the words and the link without it");
+  if(file && navigator.canShare && navigator.canShare({files: [file]}))
+    return navigator.share({files: [file], title: pack.title, text: pack.text + "\n" + pack.url}).then(function(){ result("shared"); }, fail);
+  return navigator.share({title: pack.title, text: pack.text, url: pack.url}).then(function(){ result("shared"); }, fail);
 }
 function shareBtnHtml(kind, id, where, label, fit){
-  window.pixSt(function(){ shareWarm(kind, id); }, 300);
+  window.pixSt(function(){ shareWarm(kind, id); }, 60);          // (it was 300 ms: the card is drawn as soon as the screen is up, so it is more often ready by the tap)
   var js = "shareTap('" + kind + "'," + (id ? "'" + id + "'" : "null") + ",'" + where + "')";
   if(!fit) return pixBtnHtml(label || t("shareBtn"), js, true);
   return '<button class="btn pixBtn secondary ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();' + js + '">' + (label || t("shareBtn")) + '</button>';      // (the same size as INSTALL THE APP, under it on the Options screen)
@@ -12665,7 +12671,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT2";
+var APP_BUILD = "2026-11-08 IT3";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
