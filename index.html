@@ -12643,7 +12643,13 @@ function shareBtnHtml(kind, id, where, label, fit){
 function shareTap(kind, id, where){
   if(where === "award"){      // the badge screen leaves by itself after its 2.5 s: a player who shares keeps it until CONTINUE
     awardHeld = true; clearTimeout(awardTimer); awardTimer = 0;
-    var p = shareDo(kind, id, where); render(); return p;
+    // (2026-11-08, per Dan: after the share sheet closed, CONTINUE took a second or so to appear.) The whole badge screen used to be built again at the tap (new picture, confetti started again), which the phone then
+    // painted when the sheet went away. Now CONTINUE is simply put in beside SHARE at the tap, before the sheet opens, and nothing else on the screen is touched: it is there the moment the sheet closes.
+    var row = document.querySelector(".shareRow");
+    if(document.querySelector('[onclick*="awardContinue"]')){ /* already there */ }
+    else if(row) row.insertAdjacentHTML("beforebegin", pixBtnHtml(t("shareContinue"), "awardContinue()"));
+    else render();
+    return shareDo(kind, id, where);
   }
   return shareDo(kind, id, where);
 }
@@ -12672,7 +12678,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT4";
+var APP_BUILD = "2026-11-08 IT5";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
