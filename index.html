@@ -75,6 +75,11 @@
   .loadWait{opacity:0;animation:bootShow .01s linear .4s forwards;}      /* the "Loading tiles..." card of Faith Match and the Stained-Glass Puzzle shows only if loading takes more than 0.4 s (2026-11-05, per Dan: it flashed for one frame) */
   #boot img{width:144px;height:144px;border-radius:32px;image-rendering:pixelated;box-shadow:0 0 0 4px #1B1F3B,0 8px 0 4px rgba(27,31,59,.35);}
   #boot span{font:700 15px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.06em;color:#fff;text-shadow:2px 0 #1B1F3B,-2px 0 #1B1F3B,0 2px #1B1F3B,0 -2px #1B1F3B,2px 2px #1B1F3B,-2px -2px #1B1F3B,2px -2px #1B1F3B,-2px 2px #1B1F3B;}
+  /* The loading bar (2026-11-08, Italian copy IT8, per Dan): on the first visit of a build the loading screen stays up until the pictures are in, and a pilgrim walks along the bar as they come. --p is the percent (set on #boot). */
+  #boot .bootBar{position:relative;width:min(70vw,280px);height:20px;box-sizing:border-box;margin-top:26px;border:4px solid #1B1F3B;border-radius:10px;background:#35507F;box-shadow:0 4px 0 rgba(27,31,59,.35);opacity:0;animation:bootShow .01s linear .4s forwards;}
+  #boot .bootFill{display:block;position:absolute;left:0;top:0;bottom:0;width:calc(var(--p,0) * 1%);background:linear-gradient(#FFE27A,#FFC93A);border-radius:5px;transition:width .2s linear;}
+  #boot .bootPil{position:absolute;bottom:100%;left:calc(var(--p,0) * 1% - 16px);width:33px;height:45px;margin-bottom:2px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAPCAYAAADgbT9oAAAA50lEQVR4nGNkQAJa0kL/kfnXnr5jROaTopYRWWF3qAaK5tLVN7AaToxaRlwKkTWAAEwTsWpZsClwTs5DcFZnMVxdp8GgHXTjPzbX41LLhNVqBgYGI48sOLu68QUuZTjVgg0GuQTmDRg4t2MaVkOIVYs1KPbOnYTXhcSoZSIUId1o4sSqxXCxbWoACp/tnxzD0fIqrAbhU4th8OHZGxiuPnrDoC0ngtUwYtUy4fMaOiBFLc7kRinAarA2EcFASC0LNF3+h6VFWGJH5gfoC8A1wHIacqZAVo8R0aDwQy6xkPm4xLHph8kBAF25h0pdzxu4AAAAAElFTkSuQmCC) 0 0 / 66px 45px repeat-x;image-rendering:pixelated;animation:bootWalk .5s steps(2) infinite;transition:left .2s linear;}
+  @keyframes bootWalk{from{background-position:0 0;}to{background-position:-66px 0;}}
   .screen{
     flex:1;
     display:flex;
@@ -1299,7 +1304,7 @@ width:13.6%;aspect-ratio:17/13;animation:doveFly 28s linear infinite;animation-d
 </style>
 </head>
 <body>
-<div id="boot" aria-hidden="true"><img src="data:image/png;base64,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" alt="" width="144" height="144"><span>Loading… · Caricamento…</span></div>
+<div id="boot" aria-hidden="true"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAGYElEQVR42u3dXYgVdRgH4L99UJtohShkexGiIhRSRhF200WFFLIldhGSUEgUhZSYEET0BVKIhghJiIUgXiSmCCFhsFdSSSoiISqb0KakWLmLWUbY3exsnPHMnJk5e2bmea6GZc5xzpx5eX++Zz4mDeweuRqgoa6zC1AAoABAAYACAAUACgAUACgAUACgAEABgAIABQAKABQAKACokhuKeqPdA1O6ttFP7Rn1zaEDgAIABQAKABQAhImYAv100c5EBwAFAFUxya0R0QFAAUAwBaJ851fPiZanrztph+gAoABABGqC++ZOjpaH7Q4dABQAiED0qm5e8Re6eCWgDoAIBCIQoegfueLTniT9n97b8u+HT1wKfizTAUABgAhUEfG4Mpwi9gy/eKT1+/TY56rrFX86ACIQiEBwDa8PjuoAoABAAYACAAUAwRSIkOEcof7YOUIukNcBQAGACNQQz10Zi0CHwyU7RAcABQDB3aFDPSc/6++a0Xb9VafPBRMhHQAUACgAUACgACCYAoX6TX6CiZAOAAoAgnOBKh97gmeK6QCgAEAEap48k5+k94lPhNABQAGACBTqO/kxEdIBQAGACBSaMfkxEdIBQAFAcDp0MPkJnT2bDB0AFACIQF2IQ/sP/dDx+/x8+nim9Z9fskzs0QFAAUDwQ1gPe3TB/R2/9rNd2+1AHQAUAIhAVTfnrQNt1zn5wUI7SgcABQAKABQAKAAIpkB1cXDXtmj5gSXL7RAdABQAiEBNIPboAKAAQAGAAgAFAMEUKNTzvkBlnOrsTtE6ACgAEIF6MPakuV9Q1vsCiUM6ACgAEIG6EHuSHn7RCw+qSNw2cUgHAAUAIlBxsSdU8Jll4pAOAAoARKBrRZ2Kx55Uk6JND7ecYjU5GukAiEAgAjUk9rwwtS9aPvbbaKU/V57tj++HrQ2eFOkAiEAgAjXkNOatI5dr8xnL+CxNO61aB0AEAhGoZpLad9IT3vM80rQq4o9e9cR5HQAUACIQ/7N/79PR8svfvRGy3NunjCiV5qnx01/aEy3vePLzse1Z/KUvVAcABQAiUDc9Mndqx68dPDFiB+oAoABAAYACAAUAYeKmQM/O/7jSH3ij77x23+mOo6/pAKAAIGsEqnr7gzzHsA6ACASmQCmdHfm19jtl/CnE1Tid+PzmgbHt31zt73Ttqr0dv3bjlhU6ACgASBOB8rS/PK3qzfWLe2pHpHmkadlXfoUSrhSriqRjacaimW1fe27fmWh55YotmY4xHQARCEyButyq4u/Ta3GoKAMrxj7XrHnzW64zdPxoy78Prtle+4MvfgykOX6SJL02zTGmAyACQVNN2nDklavdalVpolHZceiLpTsLf88NHy1r+fek2JMkKQ79HmZHy++tebfw7X9m59JKTHvyHFchYQKpAyACQTAFyv4j1+iZv6LlKTNvLrxFlhGHSmn3Q8W8TTwyxePQ7eHUhMSVsqWJPQ8+NCta/mbXj5mOt/j7J8UhHQARCESgDlpVvA3FW9X33w513AqTWlUvOzDr72h54dBNhcehcRImRfFtqLonHl8QLX/19aHCY7YOAAoAct4dOk3sSZoUJbW5qhsXRWJxJeuPYkVFo1Tb2WOSjocyjhkdABEIRKAOpJn2NCH2TFQcynPeUdbIVEZ8ik/8+u65deyY6Z+cKRqNi9zDl6Lly8cu6gCgACBPBMraqtL87z5rqxKHJjgyFTRxip/flXS+WfzYSHOMxdcPGW/CoAMgAkFwRVhIdYpyPALF5WlV8QhU1wvkkySdOzRR0agMQyki0+JNra/USzreko6frPee0gEQgUAECvkuai67VTVNmtOq6xST4u5+9e3QrVtu6gCIQCAChWbfHbquManqkemdle+3XWf2ukU6ACgACF08HToeY06t3ldqqyLkPy054zk8vRyZhi/8GS0vj0XBrPtEB0AEgsZGoMv//Nt2pb4bry+kVc22vysVmQ5cORh6deLUP+2W1v9WLOal+bw6ACIQmAJdQ5qYlKZVYeKUJhr13TZ2q8wPt33S/vj840zbHwqTtl8HQASCxkagXy6cbbvSndPuaL/O2scyRak8k6WqS4qUVd8naSZFQyluCBCPNPE4pAOAAoAuT4HSxKSskSnPZKnsqJBn2ybq303aJ0U9sCOk+cFrXsZtLjne6ACgACDZf/AG+M4D1O9EAAAAAElFTkSuQmCC" alt="" width="144" height="144"><span>Loading… · Caricamento…</span><div class="bootBar"><i class="bootFill"></i><b class="bootPil"></b></div></div>
 <div id="app"></div>
 <div id="rotateMsg" class="rotateMsg" role="alert"><div class="rotatePhone"></div><div class="rotateText" id="rotateText">PLEASE ROTATE YOUR PHONE</div><div class="rotateSub" id="rotateSub"></div></div>
 <script src="emmaus_layout.js"></script>
@@ -2581,7 +2586,9 @@ function pixAfterSfx(name, fn, early){
 function pixSfxPlayNow(name, exclusive){      // (pixSfxPlay, below the revive code, holds the sound first while a finger is down and the engine is not trusted)
   var ctx = pixCtx(); if(!ctx) return false;
   var buf = pixSfxBuf[name];
-  if(!buf){ pixSfxDecode(name, function(){ pixSfxPlay(name, exclusive); }); return false; }
+  // (2026-11-08, Italian copy IT7, per Dan: on the very first tap after a fresh load he heard a tone and the pop together.) The tone is the old blip that stands in for the button sound while its file has not arrived (pixTap).
+  // When the file then arrived, this played the pop as well, late. The button sound is therefore not played late: the blip was its stand-in. (Other sounds are still played when they are ready.)
+  if(!buf){ pixSfxDecode(name, name === "tap" ? function(){} : function(){ pixSfxPlay(name, exclusive); }); return false; }
   try {
     if(ctx.state !== "running" && ctx.resume) ctx.resume();
     if(exclusive && pixSfxCurrent){ try { pixSfxCurrent.stop(); } catch(e){} }
@@ -12693,7 +12700,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT6";
+var APP_BUILD = "2026-11-08 IT8";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -12915,6 +12922,7 @@ function pixHoldUntilLoaded(app){
 }
 // Every picture of the game (tiles/, all the .png and .jpg: 299 of them, about 5.6 MB), fetched a few at a time in the background after the first screen is up. New pictures put in tiles/ must be added to this list.
 var PRELOAD_LIST = "logo_small.png|qr_feyvida.png|scene_church.png|church_interior2.png|sky_menu.png|clouds_1.png|clouds_2.png|clouds_3.png|scene_world4.png|spark.png|fence_front4.png|dove3.png|pilgrim.png|pilgrim_back.png|sheep_near2.png|sheep_far2.png|heart_full.png|heart_empty.png|icons48p/ic_back.png|icons48p/ic_beTheLight.png|icons48p/ic_catchLight.png|icons48p/ic_chooseJoy.png|icons48p/ic_dovePeace.png|icons48p/ic_emojiStories.png|icons48p/ic_faithFlash.png|icons48p/ic_faithMatch.png|icons48p/ic_followLight.png|icons48p/ic_fruitsSpirit.png|icons48p/ic_goldenTicket.png|icons48p/ic_hiddenBlessings.png|icons48p/ic_hopeGarden.png|icons48p/ic_jacobLadder.png|icons48p/ic_jesusTimeline.png|icons48p/ic_kindnessSort.png|icons48p/ic_lightCandle.png|icons48p/ic_lock.png|icons48p/ic_music.png|icons48p/ic_mustardSeed.png|icons48p/ic_options.png|icons48p/ic_passport.png|icons48p/ic_pathOfLight.png|icons48p/ic_pilgrimRoad.png|icons48p/ic_prayBeads.png|icons48p/ic_sacredSudoku.png|icons48p/ic_sound.png|icons48p/ic_stainedGlass.png|icons48p/ic_tbd.png|icons48p/ic_wordGroups.png|icons48p/ic_wordTrail.png|icons48p/ic_wordUnscramble.png|icons48p/ic_emmaus.png|stars_tile.png|icons/lc_peace.png|ms/ms_1.png|fruits/fs_3.png|icons/lc_healing.png|icons/lc_family.png|emoji/e_ladder.png|fruits/fs_8.png|icons/ic_sound.png|icons/lc_friends.png|fruits/fs_7.png|icons/lc_courage.png|icons/lc_thanks.png|icons/ic_tbd.png|fruits/fs_6.png|icons/ic_wordUnscramble.png|icons/ic_back.png|fruits/fs_1.png|fruits/fs_2.png|icons/ic_goldenTicket.png|icons/ic_passport.png|ms/ms_2.png|fruits/fs_4.png|icons/ic_music.png|icons/ic_beTheLight.png|icons/ic_faithFlash.png|icons/ic_lock.png|icons/ic_kindnessSort.png|pr/church.png|emoji/e_tablets.png|icons/ic_lightCandle.png|hands.png|fruits/fs_5.png|flame.png|icons/ic_faithMatch.png|emoji/e_cross.png|icons/ic_emojiStories.png|icons/ic_hiddenBlessings.png|fruits/fs_9.png|icons/ic_catchLight.png|dove.png|ms/ms_5.png|fruits/fs_9c.png|icons/ic_jesusTimeline.png|icons/ic_options.png|sheep_far.png|icons/ic_followLight.png|card_back.png|ms/ms_3.png|fruits/fs_9b.png|icons/ic_pathOfLight.png|icons/ic_chooseJoy.png|icons/ic_emmaus.png|fruits/fs_9d.png|candle.png|cat.png|icons/ic_sacredSudoku.png|emoji/e_mountain.png|sheep_near.png|dog.png|icons/ic_stainedGlass.png|emoji/e_heart.png|fence_front2.png|ms/ms_4.png|icons48/ic_dovePeace.png|emoji/e_crown.png|icons48/ic_mustardSeed.png|emoji/e_cup.png|icons48/ic_fruitsSpirit.png|emoji/e_sunrise.png|ms/ms_6.png|fence_front.png|anamaria_placeholder.png|emoji/e_bread.png|sheep.png|icons48/ic_prayBeads.png|emoji/e_dove.png|icons48/ic_pilgrimRoad.png|icons48/ic_tbd.png|dove2.png|emoji/e_tower.png|icons48/ic_emmaus.png|icons48/ic_followLight.png|icons48/ic_wordGroups.png|emoji/e_jar.png|icons48/ic_jacobLadder.png|icons48/ic_wordUnscramble.png|icons48/ic_sound.png|emoji/e_rain.png|icons48/ic_faithFlash.png|icons48/ic_passport.png|icons48/ic_hopeGarden.png|icons48/ic_lock.png|emoji/e_sailboat.png|icons48/ic_wordTrail.png|emoji/e_house.png|icons48/ic_music.png|emoji/e_walk.png|icons48/ic_goldenTicket.png|hands3.png|icons48/ic_beTheLight.png|icons48/ic_kindnessSort.png|icons48/ic_back.png|icons48/ic_emojiStories.png|hands2.png|emoji/e_sheep.png|emoji/e_pig.png|emoji/e_pray.png|icons48/ic_lightCandle.png|emoji/e_fire.png|emoji/e_star.png|icons48/ic_faithMatch.png|emoji/e_rainbow.png|icons48/ic_hiddenBlessings.png|icons48/ic_sacredSudoku.png|icons48/ic_catchLight.png|emoji/e_ship.png|emoji/e_tree.png|emoji/e_people.png|icons48/ic_jesusTimeline.png|icons48/ic_chooseJoy.png|emoji/e_seedling.png|emoji/e_apple.png|icons48/ic_stainedGlass.png|emoji/e_moon.png|icons48/ic_options.png|icons48/ic_pathOfLight.png|emoji/e_elephant.png|emoji/e_moneybag.png|emoji/e_fish.png|emoji/e_sun.png|blessings.png|emoji/e_herb.png|emoji/e_boy.png|emoji/e_baby.png|emoji/e_oldman.png|emoji/e_whale.png|emoji/e_earth.png|emoji/e_wave.png|emoji/e_snake.png|emoji/e_feet.png|hg_qr.png|emoji/e_target.png|emoji/e_lion.png|emoji/e_angel.png|emoji/e_ogre.png|lawn.png|faith_tile8_08.png|passport_bg.png|faith_tile8_10.png|faith_tile8_00.png|faith_tile8_01.png|clouds_menu.png|faith_tile8_07.png|faith_tile8_14.png|faith_tile8_06.png|faith_tile8_03.png|faith_tile8_09.png|faith_tile8_04.png|faith_tile8_15.png|faith_tile8_05.png|faith_tile8_02.png|logo_8bit.png|faith_tile8_11.png|faith_tile8_13.png|faith_tile8_12.png|badges8/b8_mercy.png|badges8/b8_love.png|badges8/b8_salvation.png|badges8/b8_faith.png|badges8/b8_forgiveness.png|badges8/b8_grace.png|badges8/b8_holiness.png|scene_home.png|badges8/b8_light.png|badges8/b8_hope.png|hb_scene.png|badges8/b8_friendship.png|church_interior.png|scene_world.png|scene_world2.png|badges96/b96_perseverance.png|badges96/b96_growth.png|badges96/b96_discipleship.png|badges96/b96_scripture.png|badges96/b96_spirit.png|badges96/b96_wisdom.png|badges96/b96_truth.png|badges96/b96_beads.png|badges96/b96_mercy.png|badges96/b96_faith.png|badges96/b96_forgiveness.png|badges96/b96_salvation.png|badges96/b96_love.png|badges96/b96_friendship.png|badges96/b96_holiness.png|badges96/b96_grace.png|badges96/b96_light.png|badges96/b96_hope.png|faith_tile2_08.jpg|faith_tile2_07.jpg|faith_tile2_01.jpg|faith_tile2_10.jpg|faith_tile2_00.jpg|faith_tile2_09.jpg|faith_tile2_06.jpg|faith_tile2_14.jpg|faith_tile2_11.jpg|anamaria.png|faith_tile2_02.jpg|faith_tile2_05.jpg|faith_tile2_03.jpg|faith_tile2_04.jpg|faith_tile2_13.jpg|faith_tile2_15.jpg|faith_tile2_12.jpg|puzzle/pz_03.jpg|puzzle/pz_08.jpg|puzzle/pz_11.jpg|puzzle/pz_06.jpg|puzzle/pz_05.jpg|puzzle/pz_04.jpg|puzzle/pz_01.jpg|puzzle/pz_07.jpg|puzzle/pz_10.jpg|puzzle/pz_12.jpg|puzzle/pz_02.jpg|puzzle/pz_09.jpg|golden_ticket.png|golden_ticket_es.png|badge_discipleship.png|badge_perseverance.png|badge_growth.png|badge_wisdom.png|badge_truth.png|badge_scripture.png|badge_spirit.png|badge_beads.png|badge_faith.png|badge_love.png|badge_hope.png|badge_holiness.png|badge_friendship.png|badge_light.png|badge_forgiveness.png|badge_mercy.png|badge_salvation.png|badge_grace.png|hg_intro_scene.png".split("|");
+var PRELOAD_KB = [1,1,4,6,1,1,1,1,8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,6,7,8,11,11,11,12,12,12,12,12,14,14,15,15,15,15,15,15,15,16,16,16,17,17,17,19,21,22,22,22,23,23,24,26,30,30,32,45,48,56,57,58,59,61,62,63,70,81,82,100,86,117,117,118,121,123,126,127,128,205,212,214,214,216,218,220,220,220,221,282];          // the size of each picture above in KB (for the loading bar); regenerate when the list changes
 var pixPreloadDone = false, pixBgAllDone = false;
 // The background queue (2026-11-07, per Dan; see the note at pixSfxFetchOne). In order: the pictures the first screens and the Missions window need (the front of PRELOAD_LIST), the tap sound, the music, the rest of the pictures
 // (smallest first, the big badges last), then the other sounds (smallest first). Four at a time. Nothing new starts while a screen is waiting for its own pictures (pixScreensWaiting).
@@ -12961,7 +12969,7 @@ function pixBgNext(){
   }
 }
 pixIdleHooks.push(pixBgNext);
-function pixBgGo(){ if(pixBgStarted) return; pixBgStarted = true; dbgLog("assets: the background loading starts (" + Math.round(performance.now() / 1000) + " s after the page loaded, screen " + state.screen + ")"); pixBgBuild(); pixBgNext(); }
+function pixBgGo(){ if(pixBgStarted || pixGateActive) return; pixBgStarted = true; dbgLog("assets: the background loading starts (" + Math.round(performance.now() / 1000) + " s after the page loaded, screen " + state.screen + ")"); pixBgBuild(); pixBgNext(); }
 // (2026-11-08, Italian copy IT6) a page that is too busy to answer is written to the event log (the first 15 times): the page did nothing for about so many milliseconds
 (function(){ var last = performance.now(), n = 0; setInterval(function(){ var now = performance.now(), gap = now - last - 250; last = now; if(gap > 350 && n < 15 && !document.hidden){ n++; dbgLog("slow: the page was busy and did not answer for about " + Math.round(gap) + " ms (screen " + state.screen + ")"); } }, 250); })();
 function pixBgSoon(){ if(pixBgStarted || pixBgTimer) return; pixBgTimer = window.pixSt(pixBgGo, 800); }          // the first screen is up: a moment later the background loading starts
@@ -13162,7 +13170,7 @@ function renderApply(html){
   var app = document.getElementById("app");
   app.classList.remove("assetsWait");
   var boot = document.getElementById("boot");          // the first screen is up: the loading screen goes at once (it used to fade out over .25 s; 2026-11-04, per Dan: no screen fades)
-  if(boot && boot.parentNode) boot.parentNode.removeChild(boot);
+  if(boot && boot.parentNode && !pixGateActive) boot.parentNode.removeChild(boot);          // (the loading screen with the bar goes when the pictures are in: see pixGateStart)
   pixBgSoon();
   var isNewScreen = state.screen !== lastRenderedScreen;
   var enteringPassportFresh = state.screen === "passport" && isNewScreen;
@@ -13314,6 +13322,47 @@ function renderApply(html){
   }
 }
 
+
+// ---- the loading screen (2026-11-08, Italian copy IT8, per Dan) ----
+// On the first visit of a build every picture (5 MB) is fetched and decoded behind the loading screen before the first tap is possible, so no screen waits for its pictures, no Faith Match tile shows white, and the tap sound
+// is in. The bar fills with the bytes that arrive and a pilgrim walks along it. After PIX_GATE_MAX it opens anyway (the rest goes on in the background, as before). A phone that has already saved everything of this build (the
+// "offline: everything is saved" step sets fevidaItWarm) skips it. The sounds and the music load in the background once it is done (pixBgGo).
+var pixGateActive = false, pixGateT0 = 0, PIX_GATE_MAX = 12000;
+function pixGateNeeded(){
+  if(PIX_OFF || !window.fetch) return false;
+  try { if(localStorage.getItem("fevidaItWarm") === APP_BUILD) return false; } catch(e){}
+  return true;
+}
+function pixGateStart(){
+  if(!pixGateNeeded()) return;
+  var boot = document.getElementById("boot"); if(!boot) return;
+  pixGateActive = true; pixGateT0 = performance.now();
+  // What it waits for: every picture the screens and games use, but not the 18 big badge pictures (3 MB, only the Passport shows them) nor the old faith_tile2 pictures (no screen uses them): those load in the background afterwards.
+  var idxs = [], total = 0, got = 0, qi = 0, running = 0, finished = false, i, n;
+  for(i = 0; i < PRELOAD_LIST.length; i++){ var nm = PRELOAD_LIST[i]; if(nm.indexOf("badge_") === 0 || nm.indexOf("faith_tile2_") === 0) continue; idxs.push(i); total += (PRELOAD_KB[i] || 1); }
+  n = idxs.length;
+  dbgLog("assets: the loading screen is up (first visit of this build): " + n + " pictures, " + total + " KB");
+  function paint(){ boot.style.setProperty("--p", Math.max(0, Math.min(100, Math.round(100 * got / total)))); }
+  function finish(why){
+    if(finished) return; finished = true;
+    boot.style.setProperty("--p", 100);
+    pixGateActive = false;
+    dbgLog("assets: the loading screen was up " + Math.round(performance.now() - pixGateT0) + " ms (" + why + ", " + Math.round(100 * got / total) + "% of the bytes)");
+    window.pixSt(function(){ var b = document.getElementById("boot"); if(b && b.parentNode && lastRenderedScreen) b.parentNode.removeChild(b); pixBgGo(); }, 150);
+  }
+  function next(){
+    while(running < 8 && qi < n){
+      (function(idx){
+        running++;
+        pixLoad(pixAbs("tiles/" + PRELOAD_LIST[idx]), function(){ running--; got += (PRELOAD_KB[idx] || 1); paint(); if(qi >= n && running === 0) finish("everything loaded"); else next(); }, false);
+      })(idxs[qi++]);
+    }
+  }
+  try { pixSfxFetchOne("tap"); } catch(e){}          // the button sound (8 KB) goes first with the pictures
+  paint(); next();
+  window.pixSt(function(){ finish("the " + (PIX_GATE_MAX / 1000) + " s limit"); }, PIX_GATE_MAX);
+}
+
 window.addEventListener("pagehide", saveState);
 window.addEventListener("visibilitychange", saveState);
 
@@ -13321,6 +13370,7 @@ dbgLog("page loaded " + APP_BUILD + " " + dbgView() + " nav:" + (function(){ try
 pixFontsLoad();
 pixGuardStart();
 phInit();
+pixGateStart();
 render();
 // The service worker (sw.js) saves the game on the phone so it opens from the home screen and plays without a connection. It is registered with the build in its address, so every new build is a new worker with a fresh cache.
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
