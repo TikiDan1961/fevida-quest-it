@@ -1330,6 +1330,7 @@ var quitAsk = false, quitAskScreen = null, quitRafQ = [], quitTimerQ = [], rotHo
   ["pointerdown","pointermove","pointerup","pointercancel","touchstart","touchmove","touchend","touchcancel","mousedown","mousemove","mouseup"].forEach(function(type){
     window.addEventListener(type, function(e){
       if(!quitAsk && (rotGate || performance.now() < rotGateUntil)){          // (2026-11-06, per Dan) the tap that starts the game again is not a move of the game, nor is the rest of that tap
+        if(type === "pointerdown" && typeof dbgLog === "function"){ var nowT = performance.now(); if(nowT - (window.pixSwallowLogT || 0) > 800){ window.pixSwallowLogT = nowT; dbgLog("tap: SWALLOWED by the rotate pause (" + (rotGate ? "waiting for the tap to start" : "the tap just after it") + ", " + state.screen + ")"); } }
         if(rotGate && (type === "pointerdown" || type === "touchstart" || type === "mousedown")){
           rotGateEnd(true);
           if(type === "pointerdown" && state.screen === "catchLight") clSteerFrom(e);          // (Catch the Light, per Dan: the hands go to the finger that starts the game again, and follow it)
@@ -2892,10 +2893,24 @@ function pixHoldApply(){
 function pixHoldEnd(e){ if(pixHold && (!e || e.pointerId === undefined || e.pointerId === pixHold.id)) pixHoldClear(); }
 ["pointerup", "pointercancel", "touchend", "touchcancel"].forEach(function(n){ window.addEventListener(n, pixHoldEnd, true); });
 var TAP_GLOW_MS = 100;          // how long a tapped button glows before it does its work (milliseconds)
+// (2026-11-08, Italian copy IT6, per Dan's event log: the first taps on START QUEST were not taken, and the Missions window could not be tapped.) A line in the event log for each of the first 40 touches, saying what was
+// touched and in which state the page was, and one for every touch that is not taken, with the reason. A touch that leaves no line never reached this code (something stopped it before).
+var tapTraceN = 0;
+function tapDesc(el){
+  if(!el || !el.tagName) return "nothing";
+  var c = typeof el.className === "string" ? el.className.split(" ").filter(Boolean).slice(0, 2).join(".") : "";
+  return el.tagName.toLowerCase() + (c ? "." + c : "") + (el.id ? "#" + el.id : "");
+}
+function tapState(){
+  var s = state.screen + (state.folderOpen ? ", Missions window open" : "");
+  try { if(document.querySelector(".pilgrimBusy")) s += ", pilgrim busy"; if(rotHold) s += ", rotHold"; if(rotGate) s += ", rotGate"; if(quitAsk) s += ", quit window"; if(pixAudioStale) s += ", audio stale"; } catch(e){}
+  return s;
+}
 function tapOnTouch(e){
   tapSwallow = false; tapHeldSound = undefined;
+  if(tapTraceN < 40){ tapTraceN++; try { dbgLog("tap: " + (e.pointerType || "?") + " primary=" + e.isPrimary + " on " + tapDesc(e.target && e.target.closest ? (e.target.closest("[onclick]") || e.target) : e.target) + " (" + tapState() + ")"); } catch(err){} }
   if(e.pointerType === "mouse" && e.button !== 0) return;
-  if(!e.isPrimary && !pixLoneTouch(e)) return;
+  if(!e.isPrimary && !pixLoneTouch(e)){ try { dbgLog("tap: NOT TAKEN, the phone calls this touch not primary (" + tapDesc(e.target) + ", " + state.screen + ")"); } catch(err){} return; }
   var el = e.target && e.target.closest ? e.target.closest("[onclick]") : null;
   if(!el || el.disabled || el.getAttribute("aria-disabled") === "true" || el.classList.contains("disabled")) return;
   if(el.hasAttribute("data-real")) return;   // (2026-11-08, per Dan) the SHARE buttons: the phone opens its share sheet only for the finger's own tap, not for a click made 0.1 s later by a timer, so the real click is left alone and goes straight to the button
@@ -12678,7 +12693,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT5";
+var APP_BUILD = "2026-11-08 IT6";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -12946,7 +12961,9 @@ function pixBgNext(){
   }
 }
 pixIdleHooks.push(pixBgNext);
-function pixBgGo(){ if(pixBgStarted) return; pixBgStarted = true; pixBgBuild(); pixBgNext(); }
+function pixBgGo(){ if(pixBgStarted) return; pixBgStarted = true; dbgLog("assets: the background loading starts (" + Math.round(performance.now() / 1000) + " s after the page loaded, screen " + state.screen + ")"); pixBgBuild(); pixBgNext(); }
+// (2026-11-08, Italian copy IT6) a page that is too busy to answer is written to the event log (the first 15 times): the page did nothing for about so many milliseconds
+(function(){ var last = performance.now(), n = 0; setInterval(function(){ var now = performance.now(), gap = now - last - 250; last = now; if(gap > 350 && n < 15 && !document.hidden){ n++; dbgLog("slow: the page was busy and did not answer for about " + Math.round(gap) + " ms (screen " + state.screen + ")"); } }, 250); })();
 function pixBgSoon(){ if(pixBgStarted || pixBgTimer) return; pixBgTimer = window.pixSt(pixBgGo, 800); }          // the first screen is up: a moment later the background loading starts
 // the first PIX_FIRST_PICS pictures of PRELOAD_LIST are the ones the first screens, the Main Menu and the Missions window use
 var PIX_FIRST_PICS = 51;
