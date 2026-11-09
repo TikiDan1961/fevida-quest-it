@@ -12700,7 +12700,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT8";
+var APP_BUILD = "2026-11-08 IT9";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13328,8 +13328,11 @@ function renderApply(html){
 // is in. The bar fills with the bytes that arrive and a pilgrim walks along it. After PIX_GATE_MAX it opens anyway (the rest goes on in the background, as before). A phone that has already saved everything of this build (the
 // "offline: everything is saved" step sets fevidaItWarm) skips it. The sounds and the music load in the background once it is done (pixBgGo).
 var pixGateActive = false, pixGateT0 = 0, PIX_GATE_MAX = 12000;
+// A link ending in ?loading always shows the loading screen, even on a phone that has everything (for looking at it and testing), and keeps it up for at least 3 seconds (2026-11-08, Italian copy IT9, per Dan).
+var pixGateForced = /[?&]loading(?:[=&#]|$)/.test(location.search || "");
 function pixGateNeeded(){
   if(PIX_OFF || !window.fetch) return false;
+  if(pixGateForced) return true;
   try { if(localStorage.getItem("fevidaItWarm") === APP_BUILD) return false; } catch(e){}
   return true;
 }
@@ -13348,7 +13351,8 @@ function pixGateStart(){
     boot.style.setProperty("--p", 100);
     pixGateActive = false;
     dbgLog("assets: the loading screen was up " + Math.round(performance.now() - pixGateT0) + " ms (" + why + ", " + Math.round(100 * got / total) + "% of the bytes)");
-    window.pixSt(function(){ var b = document.getElementById("boot"); if(b && b.parentNode && lastRenderedScreen) b.parentNode.removeChild(b); pixBgGo(); }, 150);
+    var hold = pixGateForced ? Math.max(150, 3000 - (performance.now() - pixGateT0)) : 150;          // (?loading: at least 3 s on show)
+    window.pixSt(function(){ var b = document.getElementById("boot"); if(b && b.parentNode && lastRenderedScreen) b.parentNode.removeChild(b); pixBgGo(); }, hold);
   }
   function next(){
     while(running < 8 && qi < n){
