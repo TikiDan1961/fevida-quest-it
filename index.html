@@ -70,7 +70,8 @@
   #boot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#4FB0F2;transition:opacity .25s ease-out;}
   /* The church icon and the words wait 0.4 s before they show (2026-11-05, per Dan: "when the app first runs I can see the image of the church appear for 1 frame in the middle of the screen"). The first screen is usually up in 0.1 s, and since the loading
      screen no longer fades out the icon was seen for a few frames and then cut away. Now a quick start shows only the plain blue, and the icon only appears when the loading really takes a while (a cold start of the home-screen app). */
-  #boot > img,#boot > span{opacity:0;animation:bootShow .01s linear .4s forwards;}
+  #boot > img,#boot > span{opacity:0;animation:bootShow .01s linear 1.5s forwards;}
+  #boot.gate > img,#boot.gate > span,#boot.gate .bootBar{animation-delay:0s;}          /* (the first visit of a build, with the loading bar, shows its picture at once) */
   @keyframes bootShow{to{opacity:1;}}
   .loadWait{opacity:0;animation:bootShow .01s linear .4s forwards;}      /* the "Loading tiles..." card of Faith Match and the Stained-Glass Puzzle shows only if loading takes more than 0.4 s (2026-11-05, per Dan: it flashed for one frame) */
   #boot img{width:144px;height:144px;border-radius:32px;image-rendering:pixelated;box-shadow:0 0 0 4px #1B1F3B,0 8px 0 4px rgba(27,31,59,.35);}
@@ -80,6 +81,72 @@
   #boot .bootFill{display:block;position:absolute;left:0;top:0;bottom:0;width:calc(var(--p,0) * 1%);background:linear-gradient(#FFE27A,#FFC93A);border-radius:5px;transition:width .2s linear;}
   #boot .bootPil{position:absolute;bottom:100%;left:calc(var(--p,0) * 1% - 16px);width:33px;height:45px;margin-bottom:2px;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAPCAYAAADgbT9oAAAA50lEQVR4nGNkQAJa0kL/kfnXnr5jROaTopYRWWF3qAaK5tLVN7AaToxaRlwKkTWAAEwTsWpZsClwTs5DcFZnMVxdp8GgHXTjPzbX41LLhNVqBgYGI48sOLu68QUuZTjVgg0GuQTmDRg4t2MaVkOIVYs1KPbOnYTXhcSoZSIUId1o4sSqxXCxbWoACp/tnxzD0fIqrAbhU4th8OHZGxiuPnrDoC0ngtUwYtUy4fMaOiBFLc7kRinAarA2EcFASC0LNF3+h6VFWGJH5gfoC8A1wHIacqZAVo8R0aDwQy6xkPm4xLHph8kBAF25h0pdzxu4AAAAAElFTkSuQmCC) 0 0 / 66px 45px repeat-x;image-rendering:pixelated;animation:bootWalk .5s steps(2) infinite;transition:left .2s linear;}
   @keyframes bootWalk{from{background-position:0 0;}to{background-position:-66px 0;}}
+
+  /* ---- the Fe y Vida screen (2026-11-09, per Dan): a plain modern page, not 8-bit. Fe y Vida's own greens and purple (from feyvida.org). It is a window of its own on top of the Main Menu. ---- */
+  /* the logo on the Main Menu is a button (2026-11-09, per Dan: so that players know to tap it): a cream plate with the app's dark outline, a drop edge like the other buttons, and a small "i" badge */
+  .pixMenuTitle[role="button"]{position:relative;top:20px;cursor:pointer;width:-moz-fit-content;width:fit-content;margin:4px auto 6px;padding:3px 12px 3px;background:#A8DC9C;border-radius:12px;box-shadow:0 0 0 3px #1B1F3B,0 6px 0 3px rgba(27,31,59,.4);-webkit-tap-highlight-color:transparent;}
+  .pixMenuTitle[role="button"]:after{content:"i";position:absolute;right:-10px;top:-12px;width:22px;height:22px;border-radius:50%;background:#1B1F3B;color:#FFC93A;box-shadow:0 0 0 2px #A8DC9C;font:700 16px/22px Georgia,"Times New Roman",serif;text-align:center;pointer-events:none;}
+  /* (2026-11-09, per Dan) the logo cannot be tapped while the pilgrim talks and walks after a badge, like the icons: it goes grey the same way */
+  .pixMenu.pilgrimBusy .pixMenuTitle[role="button"]{pointer-events:none;filter:grayscale(1);opacity:.55;}
+  /* (2026-11-09, per Dan: too much space between the score bar and the icons) the logo and the score bar sit 20 px lower; the icons and everything below stay where they are (top: moves only the thing itself) */
+  .pixMenu .progressWrap{position:relative;top:28px;}          /* (2026-11-09, per Dan: just the score bar and its 0 / 500 text 8 px lower than the logo, so 28) */
+  /* tapped: the same glow as the app buttons (the pressed look of the icons: it sinks 3 px, and the outline glows, the size --gBlur / --gSpread) */
+  .pixMenuTitle[role="button"]:active,.pixMenuTitle[role="button"].tapGlow,.pixMenuTitle[role="button"].tapHold{filter:none;transform:translateY(3px);background:#94D487;box-shadow:0 0 0 3px #1B1F3B,0 0 var(--gBlur) var(--gSpread) rgba(255,236,120,.95);}
+  .fvOverlay{position:fixed;left:0;top:0;right:0;bottom:0;z-index:80;background:#F5F8F6;color:#171A17;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.55;animation:folderFade .2s ease-out;-webkit-user-select:none;user-select:none;}
+  .fvOverlay *{box-sizing:border-box;}
+  .fvTop{position:sticky;top:0;z-index:2;background:#084A1B;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;}
+  .fvBack{border:0;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font:800 14px/1 "Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.06em;padding:11px 18px;cursor:pointer;}
+  .fvBack:active,.fvBack.tapGlow,.fvBack.tapHold{filter:none;transform:translateY(3px);background:rgba(255,255,255,.3);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 var(--gBlur) var(--gSpread) rgba(110,190,255,.85);}
+  .fvHero{background:linear-gradient(180deg,#084A1B 0%,#0D6C28 55%,#2FA23F 100%);color:#fff;text-align:center;padding:4px 22px 70px;border-radius:0 0 28px 28px;position:relative;}
+  .fvLogo{display:block;width:132px;height:auto;margin:6px auto 12px;background:#fff;border-radius:22px;padding:10px 12px 8px;box-shadow:0 6px 18px rgba(0,0,0,.25);}
+  .fvOverlay h1.fvTitle{margin:0;font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:34px;line-height:1.1;font-weight:800;letter-spacing:.01em;color:#fff;text-shadow:none;text-align:center;}
+  .fvSub{margin:10px auto 0;max-width:360px;font-size:16px;color:#E1F2DE;}
+  .fvPhoto{margin:-52px 16px 0;position:relative;z-index:1;max-width:528px;}
+  .fvPhoto img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:20px;border:4px solid #fff;box-shadow:0 10px 26px rgba(13,60,30,.28);background:#BEE3B9;}
+  .fvCap{margin:8px 6px 0;text-align:center;font-size:13px;line-height:1.35;color:#5C3A5B;font-style:italic;}
+  .fvWrap{max-width:560px;margin:0 auto;padding:16px 16px calc(28px + env(safe-area-inset-bottom));}
+  @media (min-width:600px){ .fvPhoto{margin-left:auto;margin-right:auto;} }
+  .fvCard{background:#fff;border-radius:18px;padding:16px 18px 16px;margin:0 0 14px;border-top:6px solid var(--fv,#39B54A);box-shadow:0 1px 3px rgba(13,60,30,.10),0 6px 18px rgba(13,60,30,.06);}
+  .fvCard h2{margin:0 0 8px;text-align:left;font-size:13px;line-height:1.2;font-weight:800;letter-spacing:.14em;color:var(--fv,#92278F);}
+  .fvCard p{margin:0;font-size:16px;}
+  .fvCard p + p{margin-top:10px;}
+  .fvGreen{--fv:#2FA23F;} .fvPurple{--fv:#92278F;} .fvBlue{--fv:#1B75BC;} .fvGold{--fv:#D98E04;}
+  .fvStats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}
+  .fvStat{border-radius:18px;padding:14px 10px 12px;text-align:center;color:#fff;box-shadow:0 6px 16px rgba(13,60,30,.16);}
+  .fvStat b{display:block;font-size:30px;line-height:1.1;font-weight:800;}
+  .fvStat span{display:block;margin-top:2px;font-size:13px;line-height:1.25;font-weight:700;opacity:.95;}
+  .fvS1{background:linear-gradient(145deg,#0D6C28,#2FA23F);} .fvS2{background:linear-gradient(145deg,#7A1F78,#B03FAD);} .fvS3{background:linear-gradient(145deg,#145C99,#2F8AD4);} .fvS4{background:linear-gradient(145deg,#C77A00,#F0A91A);}
+  .fvList{list-style:none;margin:0;padding:0;}
+  .fvList li{position:relative;padding:0 0 0 22px;margin:0 0 10px;font-size:15.5px;}
+  .fvList li:last-child{margin-bottom:0;}
+  .fvList li:before{content:"";position:absolute;left:2px;top:8px;width:10px;height:10px;border-radius:50%;background:var(--dot,#39B54A);}
+  .fvList li:nth-child(1){--dot:#39B54A;} .fvList li:nth-child(2){--dot:#92278F;} .fvList li:nth-child(3){--dot:#1B75BC;} .fvList li:nth-child(4){--dot:#F0A91A;} .fvList li:nth-child(5){--dot:#39B54A;}
+  .fvList b{color:#0D6C28;font-weight:800;}
+  .fvWalk{margin:20px 0 14px;text-align:center;font-size:21px;font-weight:800;color:#92278F;}
+  .fvVisit{display:block;width:min(100%,320px);margin:0 auto 10px;padding:14px 18px;border-radius:999px;background:#39B54A;color:#0B2914;text-align:center;text-decoration:none;font:800 15px/1.2 "Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.06em;}
+  .fvFb{display:flex;align-items:center;justify-content:center;gap:10px;width:min(100%,320px);margin:0 auto;padding:14px 18px;border-radius:999px;background:#1877F2;color:#fff;text-align:center;text-decoration:none;font:800 15px/1.2 "Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.06em;box-shadow:0 4px 12px rgba(24,119,242,.35);}
+  .fvFb i{display:inline-block;width:26px;height:26px;border-radius:50%;background:#fff;color:#1877F2;font:900 20px/27px Arial,Helvetica,sans-serif;font-style:normal;text-align:center;}
+  .fvAddr{display:none;text-align:center;font-size:18px;line-height:1.5;font-weight:800;color:#0D6C28;margin:0 0 12px;}
+  .fvDone{display:none;width:min(100%,320px);margin:0 auto;padding:14px 18px;border:2px solid #0D6C28;border-radius:999px;background:#fff;color:#0D6C28;text-align:center;font:800 15px/1.2 "Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.06em;cursor:pointer;}
+  .fvDone:active,.fvDone.tapGlow,.fvDone.tapHold{filter:none;transform:translateY(3px);background:#E1F2DE;box-shadow:inset 0 3px 0 rgba(255,255,255,.6),0 0 var(--gBlur) var(--gSpread) rgba(120,255,120,.95);}
+  .fvVisit:active{filter:none;transform:translateY(3px);box-shadow:inset 0 3px 0 rgba(255,255,255,.4),0 0 var(--gBlur) var(--gSpread) rgba(120,255,120,.95);}
+  .fvFb:active{filter:none;transform:translateY(3px);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 0 var(--gBlur) var(--gSpread) rgba(110,190,255,.95);}
+
+  /* ---- two Golden Tickets (2026-11-09, per Dan) ---- */
+  .gtTk{position:relative;width:min(86%,290px);margin:-4px auto 6px;}
+  .gtTk .pixTicketBig{width:100%;margin:0;}
+  /* (2026-11-09, per Dan: the second ticket the same size as the first.) Both tickets are the same, and as big as the screen allows: up to the single ticket's size (290 px) on a tall phone, smaller on a short one so that both fit */
+  .gtTwo .gtTk{width:max(150px,min(86%,290px,calc((100vh - 300px) * .78)));width:max(150px,min(86%,290px,calc((100dvh - 300px) * .78)));margin:0 auto 6px;}
+  .gtCheck{position:absolute;top:-10px;right:-10px;width:34px;height:34px;border-radius:50%;background:#2FA23F;border:3px solid #fff;color:#fff;font:900 20px/28px Arial,Helvetica,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.4);z-index:2;}
+  .gtTwo .pixResTitle{margin-top:2px;}
+
+  /* the screen after a turn of the phone (2026-11-09, per Dan's iPhone test): no white behind the page, and the app's height can be corrected by script (--appH, see vpResync) */
+  html{background:#4FB0F2;}
+  /* (2026-11-09, per Dan's second iPhone test: "it works but it's not pretty": a blue bar at the bottom, a flash and a jump when the phone is turned back.) For a moment after the phone comes back upright a cover of the Rotate message's colour stays over the page, and fades away once the page has been put right, so the correction is not seen. */
+  #vpCover{position:fixed;left:-80px;top:-80px;right:-80px;bottom:-80px;background:#1D2350;opacity:0;pointer-events:none;z-index:99998;transition:opacity .35s ease-out;}
+  html.vpHold #vpCover{opacity:1;transition:none;}
+  html.vpFix #app{height:var(--appH);}          /* (only while the numbers disagree: the class is put on by vpResync) */
   .screen{
     flex:1;
     display:flex;
@@ -174,6 +241,7 @@
   .cwPilgrim.walking .cwSprite{animation:pilgrimStep .5s steps(1) infinite,pilgrimBob .5s steps(1) infinite;}
   .cwTicket{position:absolute;display:none;image-rendering:auto;}      /* the ticket is a smooth picture (tiles/golden_ticket.png, 1100 x 700 with GOLDEN TICKET on it since 2026-11-01), no longer the 48 x 48 pixel icon (2026-10-25, per Dan) */
   .cwConfetti{position:fixed;left:0;top:0;width:100%;height:100%;z-index:60;pointer-events:none;}
+  .shareRow.shareWait{visibility:hidden;}          /* (the SHARE button of the Badge Reward screen waits for the confetti to end) */
   .cwTicket.show{display:block;animation:cwTicketPop .45s ease-out 1,cwTicketGlow 1s ease-in-out .45s infinite alternate;filter:drop-shadow(0 0 8px rgba(255,230,120,.95));}
   @keyframes cwTicketPop{0%{transform:scale(0);opacity:0;}65%{transform:scale(1.18);opacity:1;}100%{transform:scale(1);opacity:1;}}
   @keyframes cwTicketGlow{0%{filter:drop-shadow(0 0 5px rgba(255,230,120,.8));}100%{filter:drop-shadow(0 0 16px rgba(255,240,150,1));}}
@@ -271,7 +339,7 @@
      LANDSCAPE_OK_SCREENS (the new landscape Hope Garden will be listed there). Only a phone-sized touch screen on its side counts: a computer window that is wider than it is tall does not. */
   .rotateMsg{display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;box-sizing:border-box;padding:12px 24px;background:#1D2350;color:#fff;text-align:center;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;}
-  @media (orientation:landscape){ .rotateMsg{justify-content:flex-start;padding-top:72px;} }      /* (2026-11-06, per Dan: turned while the hands were being moved, the phone showed only the little phone, at the very bottom: the box was still as tall as the upright screen for a moment, so what is centred in it fell off the bottom. From the top, it is always on the screen. Upright, it is still centred.) */
+  @media (orientation:landscape){ .rotateMsg{justify-content:center;padding-top:12px;} .rotateSub:empty{display:none;} }          /* (2026-11-10, per Dan: centered top to bottom on its side, the little phone and the words as one group (the empty line under them takes no room); it was from the top, 72 px down) */      /* (2026-11-06, per Dan: turned while the hands were being moved, the phone showed only the little phone, at the very bottom: the box was still as tall as the upright screen for a moment, so what is centred in it fell off the bottom. From the top, it is always on the screen. Upright, it is still centred.) */
   .rotGate{position:fixed;left:0;top:0;right:0;bottom:0;z-index:99990;box-sizing:border-box;padding:24px;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(10,16,48,.5);font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;font-size:1.9rem;line-height:1.1;color:#fff;text-shadow:2px 2px 0 #0D1030;-webkit-user-select:none;user-select:none;touch-action:none;}
   .rotateText{font-size:1.75rem;line-height:1.1;letter-spacing:.06em;color:#FFC93A;text-shadow:3px 3px 0 #0D1030;}
   .rotateSub{font-size:1.125rem;line-height:1.1;letter-spacing:.05em;color:#BFD0FF;}
@@ -292,6 +360,23 @@
        with its picture drawn a whole screen wide: 1688 x 1822 picture pixels a tile on an 844 point wide phone, more than a phone can keep as one piece (it is cut into tiles, and a tile is missing for a frame where two meet).
        Now each tile is 360 points wide (a portrait phone's width), and the layer is the screen plus one tile, 4000 pixels or less on any phone; it drifts one tile and starts again, at the speed it has upright. */
     body.awardWide .pixSkyClouds,body.hglMode .hglRound .pixSkyClouds{width:calc(100% + 360px);background-size:360px auto;animation-name:pixCloudDriftW;}      /* (the ROUND X COMPLETED! screens of Hope Garden and the Road to Emmaus, played on their side, have the same moving clouds: the same small tiles, 2026-11-05, per Dan) */
+  }
+
+  /* The Keep Going / Mission Completed screens of the Road to Emmaus on their side (2026-11-09, per Dan's iPhone photo): (1) purple bands at both edges: the sky is pulled out 18 px past the app's side padding (the safe area of the
+     phone), which left a band of (safe area - 18) px of the purple page; now the sky is pulled out the whole safe area, so it reaches the edge; (2) the buttons sat 8 px under the text window: they get room. */
+  @media (orientation:landscape){
+    body.awardWide .screen.pixSky{margin-left:calc(-1 * env(safe-area-inset-left,0px));margin-right:calc(-1 * env(safe-area-inset-right,0px));}
+    /* (2026-11-09, per Dan, two photos) Both Emmaus screens on their side share one layout: the title, the window and the buttons are one group. KEEP GOING is centered top to bottom as that group; the BADGE REWARD screen puts its
+       title where KEEP GOING's is (the top of a group of KEEP GOING's height, --emKG, centered), and both leave the same space between the window and the first button. */
+    body.awardWide .screen.pixSky.pixMission{padding-top:0;padding-bottom:0;justify-content:center;}
+    body.awardWide .pixTitlePin .pixResMid{flex:none;padding-top:0;margin-bottom:17px;}
+    body.awardWide .screen.pixMission .shareRow{margin-top:0;}          /* (the buttons are 6 px apart on both screens) */
+    body.awardWide .pixTitlePin .pixIntroTitle{margin-top:0;margin-bottom:2px;}
+    body.awardWide .pixTitlePin .pixResBadge{margin-bottom:2px;}
+    body.awardWide .pixTitlePin .pixResBody{margin-top:4px;line-height:1.2;}
+    body.awardWide .screen.pixMission > .btn:last-child,body.awardWide .screen.pixMission > .shareRow:last-child{margin-bottom:0;}          /* (so that the group is centered by what can be seen) */
+    body.awardWide .pixTitlePin .pixPaper{padding-top:4px;padding-bottom:4px;}          /* (the Badge Reward window is tall: it has to fit under the title with the buttons below it, in Spanish too) */
+    body.awardWide:not(.needLandscape) .screen.pixSky.pixMission{justify-content:flex-start;padding-top:max(0px,calc((100dvh - var(--emKG,270.2px)) / 2));}
   }
   /* the landscape Hope Garden held upright: the same message, and the little phone turns the other way (2026-10-27, per Dan) */
   @media (orientation:portrait){ body.hglMode .rotateMsg{display:flex;} }
@@ -335,7 +420,7 @@
   .quitOverlay{position:fixed;left:0;top:0;right:0;bottom:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:rgba(10,20,70,.6);touch-action:none;animation:folderFade .2s ease-out;}      /* "Are you sure you want to quit?" over the game, which is dimmed and stands still (2026-11-03, per Dan) */
   .quitOverlay .pixRoundDone{min-width:280px;max-width:92%;text-align:center;}
   .quitOverlay .quitBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px;}
-  .quitOverlay .quitBtns .btn.pixBtn.pixBtnSm{width:100%;max-width:230px;min-width:130px;margin:0;}      /* KEEP PLAYING and MAIN MENU are the same size, one above the other (2026-11-04, per Dan) */
+  .quitOverlay .quitBtns .btn.pixBtn.pixBtnSm,.quitOverlay .quitBtns .btn.pixBtn.pixBtnMd{width:100%;max-width:230px;min-width:130px;margin:0;}      /* KEEP PLAYING and MAIN MENU are the same size, one above the other (2026-11-04, per Dan) */
   .quitOverlay,.instOverlay{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}      /* these windows are added to the page body, outside #app, so the no-selection rule above never reached them: a quick tap on MAIN MENU began a text selection (Copy / Look Up / Translate) instead of pressing the button (2026-11-04, per Dan) */
   body.quitPaused #app *,body.rotPaused #app *{animation-play-state:paused !important;}
   .emConfirm .pixRoundDone{min-width:280px;max-width:92%;text-align:center;}
@@ -801,11 +886,15 @@ width:13.6%;aspect-ratio:17/13;animation:doveFly 28s linear infinite;animation-d
   .pixSlot[role=button]{cursor:pointer;}
   .pixSlot.hinted{background:#7FD36F;border-color:#1E6B2B;}
   .pixWuRow.correct .pixSlot{background:#52C246;border-color:#1E6B2B;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35);}
+  .pixSlot.wrongOne{background:#D6343A;border-color:#7E1B22;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35);animation:wuShake .4s;}
   .pixWuRow.wrong .pixSlot{background:#D6343A;border-color:#7E1B22;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35);animation:wuShake .4s;}
   .pixTray{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap;margin:20px 0 6px;}   /* one row, even for 6 letters: the tiles shrink a little to fit */
   .pixTile{flex:1 1 0;min-width:0;max-width:46px;width:auto;height:52px;box-sizing:border-box;padding:0 0 3px;display:flex;align-items:center;justify-content:center;font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;font-size:1.375rem;
     color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35);background:#3A93E8;border:3px solid #1C4E9A;border-bottom-width:6px;border-radius:10px;box-shadow:inset 0 3px 0 rgba(255,255,255,.4);cursor:pointer;}
   .pixTile:active,.pixTile.tapGlow,.pixTile.tapHold {transform:translateY(3px);box-shadow:inset 0 3px 0 rgba(255,255,255,.4),0 0 var(--gBlur) var(--gSpread) rgba(110,190,255,.85);}
+  .pixTile.locked{pointer-events:none;}          /* (no letter tap while a wrong letter is red, 2026-11-10, per Dan) */
+  .wuHearts + .pixPaper{margin-top:calc(1.9rem + 4px);}          /* (the window as far under the hearts as Word Trail's letter grid, 2026-11-10, per Dan) */
+  @media (max-height:640px){ .wuHearts + .pixPaper{margin-top:calc(1.5rem + 4px);} }
   .pixTile.used{pointer-events:none;background:rgba(27,31,59,.22);border-color:rgba(27,31,59,.4);color:transparent;text-shadow:none;box-shadow:none;}
   @media (max-height:640px){
     .pixWuIntro{margin-bottom:10px;font-size:1rem;}
@@ -1023,6 +1112,7 @@ width:13.6%;aspect-ratio:17/13;animation:doveFly 28s linear infinite;animation-d
   @keyframes msPop{0%{transform:scale(.7);}60%{transform:scale(1.14);}100%{transform:scale(1);}}
   @keyframes msSpawn{0%{transform:scale(.3);opacity:.2;}100%{transform:scale(1);opacity:1;}}
   .msLegend{display:flex;align-items:center;justify-content:center;gap:4px;margin:8px 0 6px;}
+  .msArea .msLegend,.msArea .msBar{position:relative;top:var(--msDrop,0px);}          /* (2026-11-09, per Dan) the legend squares and DROP TILE sit up to 20 px lower (msFit sets --msDrop) */
   .msStage{width:30px;height:30px;flex:none;}
   .msStage.isGoal .msTile{box-shadow:0 0 0 3px #fff,0 0 0 6px #FFC93A;}
   .msArrow{flex:none;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #FFC93A;filter:drop-shadow(1px 1px 0 #1B1F3B);}
@@ -1130,6 +1220,8 @@ width:13.6%;aspect-ratio:17/13;animation:doveFly 28s linear infinite;animation-d
     opacity:.22;filter:none;cursor:pointer;transition:opacity .2s ease;}
   .pixMission .hbSpot.found{opacity:1;filter:drop-shadow(0 0 5px #FFF6C0);animation:hbPop .35s ease;pointer-events:none;}
   .pixMission .pzSvg{margin:6px 0;}
+  .pixMission.pixLower.pzHeartsScreen{padding-top:calc(env(safe-area-inset-top,0px) + 38px);}          /* (the heading and the text sit 20 px higher, the height of the row of hearts, so the picture stays where it was; 2026-11-10, per Dan) */
+  .pixMission .pzHearts{margin:0;}
   .pixMission .pzBoardRect{fill:#1E2F7A;stroke:#FFC93A;stroke-width:4;}
   .pixMission .pzTrayRect{fill:#2B4BA8;}
   @media (max-height:640px){
@@ -1304,7 +1396,7 @@ width:13.6%;aspect-ratio:17/13;animation:doveFly 28s linear infinite;animation-d
 </style>
 </head>
 <body>
-<div id="boot" aria-hidden="true"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAGYElEQVR42u3dXYgVdRgH4L99UJtohShkexGiIhRSRhF200WFFLIldhGSUEgUhZSYEET0BVKIhghJiIUgXiSmCCFhsFdSSSoiISqb0KakWLmLWUbY3exsnPHMnJk5e2bmea6GZc5xzpx5eX++Zz4mDeweuRqgoa6zC1AAoABAAYACAAUACgAUACgAUACgAEABgAIABQAKABQAKACokhuKeqPdA1O6ttFP7Rn1zaEDgAIABQAKABQAhImYAv100c5EBwAFAFUxya0R0QFAAUAwBaJ851fPiZanrztph+gAoABABGqC++ZOjpaH7Q4dABQAiED0qm5e8Re6eCWgDoAIBCIQoegfueLTniT9n97b8u+HT1wKfizTAUABgAhUEfG4Mpwi9gy/eKT1+/TY56rrFX86ACIQiEBwDa8PjuoAoABAAYACAAUAwRSIkOEcof7YOUIukNcBQAGACNQQz10Zi0CHwyU7RAcABQDB3aFDPSc/6++a0Xb9VafPBRMhHQAUACgAUACgACCYAoX6TX6CiZAOAAoAgnOBKh97gmeK6QCgAEAEap48k5+k94lPhNABQAGACBTqO/kxEdIBQAGACBSaMfkxEdIBQAFAcDp0MPkJnT2bDB0AFACIQF2IQ/sP/dDx+/x8+nim9Z9fskzs0QFAAUDwQ1gPe3TB/R2/9rNd2+1AHQAUAIhAVTfnrQNt1zn5wUI7SgcABQAKABQAKAAIpkB1cXDXtmj5gSXL7RAdABQAiEBNIPboAKAAQAGAAgAFAMEUKNTzvkBlnOrsTtE6ACgAEIF6MPakuV9Q1vsCiUM6ACgAEIG6EHuSHn7RCw+qSNw2cUgHAAUAIlBxsSdU8Jll4pAOAAoARKBrRZ2Kx55Uk6JND7ecYjU5GukAiEAgAjUk9rwwtS9aPvbbaKU/V57tj++HrQ2eFOkAiEAgAjXkNOatI5dr8xnL+CxNO61aB0AEAhGoZpLad9IT3vM80rQq4o9e9cR5HQAUACIQ/7N/79PR8svfvRGy3NunjCiV5qnx01/aEy3vePLzse1Z/KUvVAcABQAiUDc9Mndqx68dPDFiB+oAoABAAYACAAUAYeKmQM/O/7jSH3ij77x23+mOo6/pAKAAIGsEqnr7gzzHsA6ACASmQCmdHfm19jtl/CnE1Tid+PzmgbHt31zt73Ttqr0dv3bjlhU6ACgASBOB8rS/PK3qzfWLe2pHpHmkadlXfoUSrhSriqRjacaimW1fe27fmWh55YotmY4xHQARCEyButyq4u/Ta3GoKAMrxj7XrHnzW64zdPxoy78Prtle+4MvfgykOX6SJL02zTGmAyACQVNN2nDklavdalVpolHZceiLpTsLf88NHy1r+fek2JMkKQ79HmZHy++tebfw7X9m59JKTHvyHFchYQKpAyACQTAFyv4j1+iZv6LlKTNvLrxFlhGHSmn3Q8W8TTwyxePQ7eHUhMSVsqWJPQ8+NCta/mbXj5mOt/j7J8UhHQARCESgDlpVvA3FW9X33w513AqTWlUvOzDr72h54dBNhcehcRImRfFtqLonHl8QLX/19aHCY7YOAAoAct4dOk3sSZoUJbW5qhsXRWJxJeuPYkVFo1Tb2WOSjocyjhkdABEIRKAOpJn2NCH2TFQcynPeUdbIVEZ8ik/8+u65deyY6Z+cKRqNi9zDl6Lly8cu6gCgACBPBMraqtL87z5rqxKHJjgyFTRxip/flXS+WfzYSHOMxdcPGW/CoAMgAkFwRVhIdYpyPALF5WlV8QhU1wvkkySdOzRR0agMQyki0+JNra/USzreko6frPee0gEQgUAECvkuai67VTVNmtOq6xST4u5+9e3QrVtu6gCIQCAChWbfHbquManqkemdle+3XWf2ukU6ACgACF08HToeY06t3ldqqyLkPy054zk8vRyZhi/8GS0vj0XBrPtEB0AEgsZGoMv//Nt2pb4bry+kVc22vysVmQ5cORh6deLUP+2W1v9WLOal+bw6ACIQmAJdQ5qYlKZVYeKUJhr13TZ2q8wPt33S/vj840zbHwqTtl8HQASCxkagXy6cbbvSndPuaL/O2scyRak8k6WqS4qUVd8naSZFQyluCBCPNPE4pAOAAoAuT4HSxKSskSnPZKnsqJBn2ybq303aJ0U9sCOk+cFrXsZtLjne6ACgACDZf/AG+M4D1O9EAAAAAElFTkSuQmCC" alt="" width="144" height="144"><span>Loading… · Caricamento…</span><div class="bootBar"><i class="bootFill"></i><b class="bootPil"></b></div></div>
+<div id="boot" aria-hidden="true"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAGYElEQVR42u3dXYgVdRgH4L99UJtohShkexGiIhRSRhF200WFFLIldhGSUEgUhZSYEET0BVKIhghJiIUgXiSmCCFhsFdSSSoiISqb0KakWLmLWUbY3exsnPHMnJk5e2bmea6GZc5xzpx5eX++Zz4mDeweuRqgoa6zC1AAoABAAYACAAUACgAUACgAUACgAEABgAIABQAKABQAKACokhuKeqPdA1O6ttFP7Rn1zaEDgAIABQAKABQAhImYAv100c5EBwAFAFUxya0R0QFAAUAwBaJ851fPiZanrztph+gAoABABGqC++ZOjpaH7Q4dABQAiED0qm5e8Re6eCWgDoAIBCIQoegfueLTniT9n97b8u+HT1wKfizTAUABgAhUEfG4Mpwi9gy/eKT1+/TY56rrFX86ACIQiEBwDa8PjuoAoABAAYACAAUAwRSIkOEcof7YOUIukNcBQAGACNQQz10Zi0CHwyU7RAcABQDB3aFDPSc/6++a0Xb9VafPBRMhHQAUACgAUACgACCYAoX6TX6CiZAOAAoAgnOBKh97gmeK6QCgAEAEap48k5+k94lPhNABQAGACBTqO/kxEdIBQAGACBSaMfkxEdIBQAFAcDp0MPkJnT2bDB0AFACIQF2IQ/sP/dDx+/x8+nim9Z9fskzs0QFAAUDwQ1gPe3TB/R2/9rNd2+1AHQAUAIhAVTfnrQNt1zn5wUI7SgcABQAKABQAKAAIpkB1cXDXtmj5gSXL7RAdABQAiEBNIPboAKAAQAGAAgAFAMEUKNTzvkBlnOrsTtE6ACgAEIF6MPakuV9Q1vsCiUM6ACgAEIG6EHuSHn7RCw+qSNw2cUgHAAUAIlBxsSdU8Jll4pAOAAoARKBrRZ2Kx55Uk6JND7ecYjU5GukAiEAgAjUk9rwwtS9aPvbbaKU/V57tj++HrQ2eFOkAiEAgAjXkNOatI5dr8xnL+CxNO61aB0AEAhGoZpLad9IT3vM80rQq4o9e9cR5HQAUACIQ/7N/79PR8svfvRGy3NunjCiV5qnx01/aEy3vePLzse1Z/KUvVAcABQAiUDc9Mndqx68dPDFiB+oAoABAAYACAAUAYeKmQM/O/7jSH3ij77x23+mOo6/pAKAAIGsEqnr7gzzHsA6ACASmQCmdHfm19jtl/CnE1Tid+PzmgbHt31zt73Ttqr0dv3bjlhU6ACgASBOB8rS/PK3qzfWLe2pHpHmkadlXfoUSrhSriqRjacaimW1fe27fmWh55YotmY4xHQARCEyButyq4u/Ta3GoKAMrxj7XrHnzW64zdPxoy78Prtle+4MvfgykOX6SJL02zTGmAyACQVNN2nDklavdalVpolHZceiLpTsLf88NHy1r+fek2JMkKQ79HmZHy++tebfw7X9m59JKTHvyHFchYQKpAyACQTAFyv4j1+iZv6LlKTNvLrxFlhGHSmn3Q8W8TTwyxePQ7eHUhMSVsqWJPQ8+NCta/mbXj5mOt/j7J8UhHQARCESgDlpVvA3FW9X33w513AqTWlUvOzDr72h54dBNhcehcRImRfFtqLonHl8QLX/19aHCY7YOAAoAct4dOk3sSZoUJbW5qhsXRWJxJeuPYkVFo1Tb2WOSjocyjhkdABEIRKAOpJn2NCH2TFQcynPeUdbIVEZ8ik/8+u65deyY6Z+cKRqNi9zDl6Lly8cu6gCgACBPBMraqtL87z5rqxKHJjgyFTRxip/flXS+WfzYSHOMxdcPGW/CoAMgAkFwRVhIdYpyPALF5WlV8QhU1wvkkySdOzRR0agMQyki0+JNra/USzreko6frPee0gEQgUAECvkuai67VTVNmtOq6xST4u5+9e3QrVtu6gCIQCAChWbfHbquManqkemdle+3XWf2ukU6ACgACF08HToeY06t3ldqqyLkPy054zk8vRyZhi/8GS0vj0XBrPtEB0AEgsZGoMv//Nt2pb4bry+kVc22vysVmQ5cORh6deLUP+2W1v9WLOal+bw6ACIQmAJdQ5qYlKZVYeKUJhr13TZ2q8wPt33S/vj840zbHwqTtl8HQASCxkagXy6cbbvSndPuaL/O2scyRak8k6WqS4qUVd8naSZFQyluCBCPNPE4pAOAAoAuT4HSxKSskSnPZKnsqJBn2ybq303aJ0U9sCOk+cFrXsZtLjne6ACgACDZf/AG+M4D1O9EAAAAAElFTkSuQmCC" alt="" width="144" height="144"><span>Loading… · Cargando…</span><div class="bootBar"><i class="bootFill"></i><b class="bootPil"></b></div></div>
 <div id="app"></div>
 <div id="rotateMsg" class="rotateMsg" role="alert"><div class="rotatePhone"></div><div class="rotateText" id="rotateText">PLEASE ROTATE YOUR PHONE</div><div class="rotateSub" id="rotateSub"></div></div>
 <script src="emmaus_layout.js"></script>
@@ -1475,7 +1567,7 @@ var T = {
     howTitle:"How It Works", howIntro:"Uh-oh! A pilgrim is trying to get to church, and he can’t make it without you. Ready to be his hero?",
     howMissions:function(need, n){ return "Dive into the Missions folder and conquer any " + need + " of the " + n + " missions. Pick your favorites, play them in any order, and have fun!"; },
     howPoints:"Every mission you finish scores 100 points and a shiny badge for your Passport. Watch the bar at the top fill up!",
-    howTicket:function(pts){ return "Hit " + pts + " points and you win a Golden Ticket! Tap it and show your screen to the crew at the Fe y Vida booth (#301) for a special prize!"; },
+    howTicket:function(pts){ return "Hit " + pts + " points and you win a Golden Ticket! Tap it and show your screen to the crew at the Fe y Vida booth (#301) for a special prize! Then play " + GOLDEN_TICKET_MISSIONS_NEEDED + " more missions to win a second Golden Ticket and a second prize!"; },
     howHope:"Bonus fun: play Anamaria’s Hope Garden, then come meet Anamaria in person at the Unfinished booth (#400)!", howGo:"LET’S GO!",
     // the button and the window that help a player put the game on the phone's home screen (2026-11-02, per Dan; wording drafted for the client to approve). {share} is the Share icon, drawn by the game
     install_btn:"INSTALL THE APP", install_title:"Add to Home Screen", install_why:"Fe y Vida Quest opens full screen like any other app, and plays even without internet.",
@@ -1488,7 +1580,7 @@ var T = {
     questPoints:"Quest Points",
     passport:"Passport", showTicket:"🎟 VIEW GOLDEN TICKET",
     faithFlashName:"Faith Flash", faithMatchName:"Faith Match", beTheLightName:"Be the Light",
-    stainedGlassName:"Stained-Glass Puzzle", chooseJoyName:"Choose Joy",
+    stainedGlassName:"Stained-Glass Puzzle", chooseJoyName:"Share Joy",
     done:"DONE",
     ff_intro:"Get through 3 rounds of 10 questions to earn your badge! You have 3 chances.", ff_round:function(n,total){return "Round "+n+" of "+total;}, ff_roundDone:function(n){return "ROUND "+n+" COMPLETED!";}, ff_awarded:"AWARDED!",
     nextQuestion:"NEXT QUESTION", collectAward:"COLLECT AWARD", playAgain:"PLAY AGAIN", tryAgain:"TRY AGAIN",
@@ -1505,9 +1597,9 @@ var T = {
     guides:{
       faithFlash:{d:"Answer questions about the Catholic faith to earn your badge.", h:["Tap the right answer for each question.", "Finish 3 rounds of 10 questions.", "You have 3 chances. A wrong answer costs one, and a lost chance is given back after each round."]},
       faithMatch:{d:"Flip the tiles and find all the matching pairs.", h:["Tap two tiles to turn them over.", "A match stays face up. If they do not match, they flip back and you lose a chance.", "Match every pair to clear a level. Clear all 3 levels to win."]},
-      stainedGlass:{d:"Rebuild a stained-glass picture from puzzle pieces.", h:["Drag each piece from the tray into the frame.", "A piece snaps into place when it fits.", "Finish all 4 puzzles to win."]},
+      stainedGlass:{d:"Rebuild a stained-glass picture from puzzle pieces.", h:["Drag each piece from the tray into the frame.", "A piece snaps into place when it fits.", "You have 5 chance hearts. A piece put in the wrong place costs one, and finishing a level wins one back.", "Finish all 4 puzzles to win."]},
       followLight:{d:"Watch the tiles light up, then play the same notes back.", h:["Listen to the hymn notes and watch the tiles that light up.", "Tap the same tiles in the same order. Tap REPEAT to see the pattern again.", "A wrong tap costs a chance. You have 3 in all. Finish all 8 levels to win."]},
-      wordUnscramble:{d:"Unscramble words of faith.", h:["Tap the letters in the right order to spell each word.", "HINT places a correct letter, and SKIP moves on to the next word.", "You have 5 chance hearts. A wrong word costs one, and finishing a level wins one back.", "Finish 3 levels of 5 words to win."]},
+      wordUnscramble:{d:"Unscramble words of faith.", h:["Tap the letters in the right order to spell each word.", "HINT places a correct letter, and SKIP moves on to the next word.", "You have 5 chance hearts. A wrong letter costs one, and finishing a level wins one back.", "Finish 3 levels of 5 words to win."]},
       catchLight:{d:"Catch the falling lights with your hands.", h:["Slide your finger left and right on the SLIDE bar to move the hands.","Catch each light before it falls past. A miss costs a chance. You have 5 in all.", "Clear all 8 rounds to win."]},
       kindnessSort:{d:"Decide if each situation is kind or not kind.", h:["Read each situation.", "Tap KIND or NOT KIND.", "A wrong answer costs a chance. You have 3."]},
       hiddenBlessings:{d:"Search the scene for hidden blessings.", h:["Look closely and tap each blessing you find.", "Find all 6 to win."]},
@@ -1542,7 +1634,7 @@ var T = {
     shareFullText:function(game,theme){return "I finished every round of "+game+" in Fe y Vida Quest and earned the "+theme+" badge! Come play too.";},
     shareTicketText:"I earned the Golden Ticket in Fe y Vida Quest! Come play too.",
     cardHeadBadge:"BADGE EARNED!", cardHeadFull:"ALL ROUNDS DONE!", cardHeadTicket:"GOLDEN TICKET!", cardHeadApp:"COME PLAY WITH ME!", cardPlayAt:"Play free at",
-    cj_title:"Choose Joy",
+    cj_title:"Share Joy",
     cj_body:"Go to the Fe y Vida booth (#301) to have a joyful instant photo taken with a friend! Once you've done it, tap the button below.",
     awardTitle:"Mission Complete!",
     awardBody:function(pts,badge){return "You won "+pts+" Quest Points and unlocked the "+badge+" Badge!";},
@@ -1553,6 +1645,7 @@ var T = {
     ticketTitle:"Golden Ticket Unlocked!",
     ticketBody:"Show this screen to a Fe y Vida booth staff member to collect a prize!",
     clearTicket:"CLEAR TICKET",
+    clearMissions:"CLEAR MISSIONS", sureTitle:"ARE YOU SURE?", sureBody1:"Clear all the missions so this player can try for another prize? Badges and hearts stay.", sureBody2:"Mark the second prize as given?", sureYes:"YES", sureNo:"CANCEL",
     themeFaith:"Faith", themeLove:"God's Love", themeLight:"Be a Light to the World",
     themeUnity:"Unity", themeHope:"Hope",
     themeHoliness:"Holiness", themeGrace:"Grace", themeSalvation:"Salvation",
@@ -1655,7 +1748,7 @@ var T = {
     howTitle:"Come si gioca?", howIntro:"Oh no! Un pellegrino vuole raggiungere la chiesa e non ce la può fare senza di te. Vuoi essere il suo eroe?",
     howMissions:function(need, n){ return "Apri la cartella delle Missioni e porta a termine " + need + " delle " + n + " missioni. Scegli le tue preferite, giocale nell’ordine che vuoi e divertiti!"; },
     howPoints:"Ogni missione che completi ti dà 100 punti e un sigillo luminoso per il tuo Passaporto! Guarda la barra dei progressi riempirsi in alto.",
-    howTicket:function(pts){ return "Raggiungi " + pts + " punti e vincerai un Biglietto d’Oro! Toccalo e mostra il tuo schermo alla squadra dello stand di Fe y Vida (#301) per ricevere un premio speciale!"; },
+    howTicket:function(pts){ return "Raggiungi " + pts + " punti e vincerai un Biglietto d’Oro! Toccalo e mostra il tuo schermo alla squadra dello stand di Fe y Vida (#301) per ricevere un premio speciale! Poi gioca altre " + GOLDEN_TICKET_MISSIONS_NEEDED + " missioni per vincere un secondo Biglietto d’Oro e un secondo premio!"; },
     howHope:"Divertimento extra: gioca al Giardino della Speranza di Anamaria e poi vieni a conoscere Anamaria di persona allo stand di Unfinished (#400)!", howGo:"ANDIAMO!",
     install_btn:"INSTALLA L’APP", install_title:"Aggiungi alla schermata Home", install_why:"Fe y Vida Quest si apre a schermo intero come qualsiasi altra app e funziona anche senza internet.",
     install_safari:"Prima apri questa pagina in Safari: tocca il pulsante ••• o Condividi e scegli «Apri in Safari». Poi:",
@@ -1667,7 +1760,7 @@ var T = {
     questPoints:"Punti Avventura",
     passport:"Passaporto", showTicket:"🎟 MOSTRA IL BIGLIETTO D’ORO",
     faithFlashName:"Lampo di Fede", faithMatchName:"Memory della Fede", beTheLightName:"Sii la Luce",
-    stainedGlassName:"Puzzle della Vetrata", chooseJoyName:"Scegli la Gioia",
+    stainedGlassName:"Puzzle della Vetrata", chooseJoyName:"Condividi la Gioia",
     done:"COMPLETATO",
     ff_intro:"Supera 3 round da 10 domande per guadagnare il tuo sigillo! Hai 3 possibilità.", ff_round:function(n,total){return "Round "+n+" di "+total;}, ff_roundDone:function(n){return "ROUND "+n+" COMPLETATO!";}, ff_awarded:"ASSEGNATO!",
     nextQuestion:"PROSSIMA DOMANDA", collectAward:"RITIRA IL PREMIO", playAgain:"GIOCA ANCORA", tryAgain:"RIPROVA",
@@ -1683,9 +1776,9 @@ var T = {
     guides:{
       faithFlash:{d:"Rispondi a domande sulla fede cattolica per guadagnare il tuo sigillo.", h:["Tocca la risposta giusta a ogni domanda.", "Completa 3 round da 10 domande.", "Hai 3 possibilità. Una risposta sbagliata ne costa una, e alla fine di ogni round ti viene restituita quella che hai perso."]},
       faithMatch:{d:"Gira le carte e trova tutte le coppie.", h:["Tocca due carte per girarle.", "Se sono uguali, restano scoperte. Se non lo sono, si girano di nuovo e perdi una possibilità.", "Abbina tutte le coppie per passare al livello successivo. Supera i 3 livelli per vincere."]},
-      stainedGlass:{d:"Ricomponi l’immagine di una vetrata con i pezzi di un puzzle.", h:["Trascina ogni pezzo dal vassoio alla cornice.", "Il pezzo scatta al suo posto quando è quello giusto.", "Completa i 4 puzzle per vincere."]},
+      stainedGlass:{d:"Ricomponi l’immagine di una vetrata con i pezzi di un puzzle.", h:["Trascina ogni pezzo dal vassoio alla cornice.", "Il pezzo scatta al suo posto quando è quello giusto.", "Hai 5 cuori di possibilità. Un pezzo messo nel posto sbagliato te ne costa uno, e quando finisci un livello ne recuperi uno.", "Completa i 4 puzzle per vincere."]},
       followLight:{d:"Guarda come si illuminano le tessere e ripeti le stesse note.", h:["Ascolta le note dell’inno e guarda le tessere che si illuminano.", "Tocca le stesse tessere nello stesso ordine. Tocca RIPETI per vedere di nuovo lo schema.", "Un tocco sbagliato costa una possibilità. Ne hai 3 in tutto. Supera gli 8 livelli per vincere."]},
-      wordUnscramble:{d:"Rimetti in ordine le parole della fede.", h:["Tocca le lettere nell’ordine giusto per formare ogni parola.", "AIUTO mette al suo posto una lettera giusta e SALTA passa alla parola successiva.", "Hai 5 cuori di possibilità. Una parola sbagliata te ne costa uno, e quando finisci un livello ne recuperi uno.", "Completa 3 livelli da 5 parole per vincere."]},
+      wordUnscramble:{d:"Rimetti in ordine le parole della fede.", h:["Tocca le lettere nell’ordine giusto per formare ogni parola.", "AIUTO mette al suo posto una lettera giusta e SALTA passa alla parola successiva.", "Hai 5 cuori di possibilità. Una lettera sbagliata te ne costa uno, e quando finisci un livello ne recuperi uno.", "Completa 3 livelli da 5 parole per vincere."]},
       catchLight:{d:"Prendi al volo le luci che cadono con le tue mani.", h:["Fai scorrere il dito a sinistra e a destra sulla barra SCORRI per muovere le mani.","Prendi ogni luce prima che cada. Se ne lasci cadere una, perdi una possibilità. Ne hai 5 in tutto.", "Supera gli 8 round per vincere."]},
       kindnessSort:{d:"Decidi se ogni situazione è un atto di gentilezza o no.", h:["Leggi ogni situazione.", "Tocca GENTILEZZA oppure NON È GENTILEZZA.", "Una risposta sbagliata costa una possibilità. Ne hai 3."]},
       hiddenBlessings:{d:"Cerca le benedizioni nascoste nella scena.", h:["Guarda con attenzione e tocca ogni benedizione che trovi.", "Trovale tutte e 6 per vincere."]},
@@ -1693,7 +1786,7 @@ var T = {
       emojiStories:{d:"Indovina la storia biblica dalle emoji.", h:["Guarda le emoji e tocca la storia biblica che rappresentano.", "Rispondi a 8 storie in ciascuno dei 3 round. Hai 5 possibilità."]},
       jesusTimeline:{d:"Metti in ordine gli eventi della vita di Gesù.", h:["Tocca gli eventi nell’ordine in cui sono accaduti, dal primo all’ultimo.", "Completa 8 round. Ogni round ha un evento in più del precedente, da 4 eventi fino a 11. Hai 5 possibilità."]},
       sacredSudoku:{d:"Un puzzle di immagini con simboli sacri.", h:["Tocca una casella e poi un’immagine per metterla.", "Ogni immagine deve comparire una sola volta in ogni riga, in ogni colonna e in ogni blocco.", "Se un’immagine rompe la regola, diventa rossa e sparisce. Tocca AIUTO se ti serve una mano. Risolvi i 4 puzzle per vincere."]},
-      wordTrail:{d:"Trova le parole nascoste in una griglia di lettere.", h:["Tocca una lettera e trascina il dito sulla lettera successiva: in alto, in basso, a sinistra o a destra.", "Forma una parola dell’elenco qui sotto. Solleva il dito per controllarla.", "Hai 3 cuori di possibilità. Unire lettere che non formano una parola dell’elenco te ne costa uno, e quando finisci un round ne recuperi uno.", "Una parola trovata esce dall’elenco e le sue lettere vengono sostituite da altre nuove. Trova tutte le parole per finire il round. Completa i 3 round per vincere."]},
+      wordTrail:{d:"Trova le parole nascoste in una griglia di lettere.", h:["Tocca una lettera e trascina il dito sulla lettera successiva: in alto, in basso, a sinistra o a destra.", "Forma una parola dell’elenco qui sotto. Solleva il dito per controllarla.", "Hai 3 cuori di possibilità. Le lettere che non formano una parola dell’elenco te ne costano uno, e quando finisci un round ne recuperi uno.", "Una parola trovata esce dall’elenco e le sue lettere vengono sostituite da altre nuove. Trova tutte le parole per finire il round. Completa i 3 round per vincere."]},
       jacobLadder:{d:"Fai rimbalzare Giacobbe da un piolo all’altro fino alla porta del cielo.", h:["Giacobbe rimbalza da solo. Tieni premuto SINISTRA o DESTRA per muoverlo. Rimbalzerà ai bordi del cielo. La barra a destra mostra la tua altezza.", "Atterra su un piolo solo quando scende. Alcuni scivolano, altri si rompono dopo un rimbalzo, e i pioli con le ali lo lanciano molto in alto.", "Evita le nuvole temporalesche e non cadere in basso, o perdi una possibilità e dovrai ricominciare a salire. Hai 3 possibilità. Arriva alla porta in tutti e 3 i round per vincere."]},
       fruitsSpirit:{d:"Combina i frutti per raccogliere gli 8 frutti dello Spirito.", h:["Fai scorrere un frutto verso uno vicino per scambiarli. Forma una riga o una colonna di 3 o più frutti uguali, altrimenti tornano al loro posto.", "Le parole sotto la tavola contano ogni frutto che raccogli, ad esempio 3/5. Riempile tutte e 8 per finire un livello.", "Combina 4 frutti o più per creare una fiamma. La fiamma è un jolly: mettila accanto a 2 frutti uguali e cancellerà tutta la riga o la colonna.", "Sei bloccato? Tocca AIUTO (3 in tutto il gioco) per illuminare una combinazione."]},
       dovePeace:{d:"Tocca per battere le ali e guidare la colomba tra le nuvole temporalesche.", h:["Tocca in un punto qualsiasi dello schermo per far battere le ali alla colomba e farla salire. Tra un tocco e l’altro, scende.", "Vola nel varco tra ogni coppia di nuvole temporalesche per portare il ramo d’ulivo. Se urti una nuvola, perdi una possibilità. Hai 3 possibilità.", "Supera 10 nuvole per finire un round. I varchi diventano più stretti a ogni round. Nei round 2 e 3, ogni tanto un avvoltoio entra da destra: togliti dalla sua strada. Completa i 3 round per vincere."]},
@@ -1719,8 +1812,8 @@ var T = {
     shareBadgeText:function(game,theme){return "Ho vinto il sigillo "+theme+" in "+game+" di Fe y Vida Quest! Vieni a giocare anche tu.";},
     shareFullText:function(game,theme){return "Ho completato tutti i round di "+game+" in Fe y Vida Quest e ho vinto il sigillo "+theme+"! Vieni a giocare anche tu.";},
     shareTicketText:"Ho vinto il Biglietto d’Oro in Fe y Vida Quest! Vieni a giocare anche tu.",
-    cardHeadBadge:"SIGILLO VINTO!", cardHeadFull:"TUTTI I ROUND!", cardHeadTicket:"BIGLIETTO D’ORO!", cardHeadApp:"GIOCA CON ME!", cardPlayAt:"Gioca gratis su",
-    cj_title:"Scegli la Gioia",
+    cardHeadBadge:"SIGILLO VINTO!", cardHeadFull:"TUTTI I ROUND COMPLETATI!", cardHeadTicket:"BIGLIETTO D’ORO!", cardHeadApp:"GIOCA CON ME!", cardPlayAt:"Gioca gratis su",
+    cj_title:"Condividi la Gioia",
     cj_body:"Passa allo stand di Fe y Vida (#301) per farti una divertente foto istantanea con un amico! Quando hai finito, tocca il pulsante qui sotto.",
     awardTitle:"Missione Compiuta!",
     awardBody:function(pts,badge){return "Hai guadagnato "+pts+" Punti Avventura e sbloccato il sigillo "+badge+"!";},
@@ -1731,6 +1824,7 @@ var T = {
     ticketTitle:"Biglietto d’Oro Sbloccato!",
     ticketBody:"Mostra questo schermo a un membro dello staff di Fe y Vida per ricevere un premio!",
     clearTicket:"CANCELLA IL BIGLIETTO",
+    clearMissions:"CANCELLA MISSIONI", sureTitle:"SEI SICURO?", sureBody1:"Cancellare tutte le missioni così questo giocatore può provare a vincere un altro premio? I sigilli e i cuori restano.", sureBody2:"Segnare il secondo premio come consegnato?", sureYes:"SÌ", sureNo:"ANNULLA",
     themeFaith:"Fede", themeLove:"L’Amore di Dio", themeLight:"Sii una luce per il mondo",
     themeUnity:"Unità", themeHope:"Speranza",
     themeHoliness:"Santità", themeGrace:"Grazia", themeSalvation:"Salvezza",
@@ -2007,10 +2101,10 @@ var FAITH_FLASH_QUESTIONS = [
 ];
 
 var MATCH_SYMBOLS = [
-  "tiles/faith_tile8_00.png","tiles/faith_tile8_01.png","tiles/faith_tile8_02.png","tiles/faith_tile8_03.png",
-  "tiles/faith_tile8_04.png","tiles/faith_tile8_05.png","tiles/faith_tile8_06.png","tiles/faith_tile8_07.png",
-  "tiles/faith_tile8_08.png","tiles/faith_tile8_09.png","tiles/faith_tile8_10.png","tiles/faith_tile8_11.png",
-  "tiles/faith_tile8_12.png","tiles/faith_tile8_13.png","tiles/faith_tile8_14.png","tiles/faith_tile8_15.png"
+  "tiles90/faith_tile90_00.png","tiles90/faith_tile90_01.png","tiles90/faith_tile90_02.png","tiles90/faith_tile90_03.png",
+  "tiles90/faith_tile90_04.png","tiles90/faith_tile90_05.png","tiles90/faith_tile90_06.png","tiles90/faith_tile90_07.png",
+  "tiles90/faith_tile90_08.png","tiles90/faith_tile90_09.png","tiles90/faith_tile90_10.png","tiles90/faith_tile90_11.png",
+  "tiles90/faith_tile90_12.png","tiles90/faith_tile90_13.png","tiles90/faith_tile90_14.png","tiles90/faith_tile90_15.png"
 ];
 
 // The tile pictures, and the card back every tile shows face down (2026-10-22, per Dan): the card back is a CSS background, which was only fetched when the first
@@ -2131,6 +2225,9 @@ function defaultState(){
     pilgrimIn: false,    // the pilgrim has gone into the church (after the 5th game)
     pilgrimSteps: 0,     // games finished so far (each moves him one stop; see pilgrimSteps())
     ticketUnlocked: false, // the Golden Ticket icon is unlocked (at the end of the church scene)
+    tickets: 0,          // Golden Tickets won: 0, 1 or 2 (2026-11-09, per Dan); see ticketCount()
+    tk1Check: false,     // the prize of ticket 1 was handed over (CLEAR MISSIONS): the check mark on the ticket
+    tk2Check: false,     // the same for ticket 2
     volSfx: 45,     // Options screen: sound effects volume, 0-100 (starts at 45, per Dan 2026-10-20)
     volMusic: 60,   // music volume, 0-100: it starts at 60 (2026-10-22, per Dan; the slider's 100% is a quiet background level)
     musicScale: 2,  // marks a game saved with the new music slider
@@ -2436,59 +2533,59 @@ function pixBlip(ctx){
 // last-chance / first-tile / level-clear sounds of Faith Match -- and Faith Flash uses the match, miss and last-chance ones for its answers. The files are fetched when the app
 // opens and decoded as soon as the first tap gives the page an audio context. Until a file is ready, taps use the old synthesized blip.
 var PIX_SFX = {
-  tap:{url:"sounds/sfx_tap.wav", gain:1.6},
+  tap:{url:"soundsb/sfx_tap.wav", gain:1.6},
   // Faith Match (2026-10-20, per Dan): sound_effect_6 = a match, _9 = a miss, _8 = the last chance used, _7 = the level-clear fanfare
-  fmFirst:{url:"sounds/sfx_fm_first.wav", gain:0.26},   // sound_effect_10: the first of the two tiles (levelled with the other Faith Match sounds)
-  fmMatch:{url:"sounds/sfx_fm_match.mp3", gain:0.25},   // was 0.55: too loud next to the other sounds (2026-10-20, per Dan)
-  fmMiss:{url:"sounds/sfx_fm_miss.mp3", gain:0.28},
-  fmLast:{url:"sounds/sfx_fm_last.mp3", gain:0.37},   // was 1: levelled with the match / miss sounds (2026-10-20, per Dan)
+  fmFirst:{url:"soundsb/sfx_fm_first.wav", gain:0.26},   // sound_effect_10: the first of the two tiles (levelled with the other Faith Match sounds)
+  fmMatch:{url:"soundsb/sfx_fm_match.wav", gain:0.25},   // was 0.55: too loud next to the other sounds (2026-10-20, per Dan)
+  fmMiss:{url:"soundsb/sfx_fm_miss.wav", gain:0.28},
+  fmLast:{url:"soundsb/sfx_fm_last.wav", gain:0.37},   // was 1: levelled with the match / miss sounds (2026-10-20, per Dan)
   // the tile frames flashing at the end of a Faith Match level (and the Sacred Sudoku picture flash): sound_effect_3.wav itself (2026-10-22, per Dan), its first phrase
   // from the start, 3.7 s (the file holds the phrase twice). It was sfx_fm_fanfare.mp3, a cut that skips the first second and a half of the build-up.
-  fmFanfare:{url:"sounds/sfx_sound3.wav", gain:0.17},   // gain was 0.55 before: 10 dB too loud next to the others
+  fmFanfare:{url:"soundsb/sfx_sound3.wav", gain:0.17},   // gain was 0.55 before: 10 dB too loud next to the others
   // the ROUND X COMPLETED! sound in Faith Flash: sound_effect_3.wav from the Non 8-Bit Sounds folder, played ONCE -- the file holds the same phrase twice
   // and only the first is used (2026-10-22, per Dan: the whole file made it play twice). It is the same recording as the Faith Match fanfare above.
-  ffRound:{url:"sounds/sfx_fm_fanfare.mp3", gain:0.17},
+  ffRound:{url:"soundsb/sfx_fm_fanfare.wav", gain:0.17},
   // Catch the Light (2026-10-22, per Dan): sound_effect_1 when the hands catch a light, sound_effect_2 for each light that fades away after a miss
   // (both from the Non 8-Bit Sounds folder, with the silence at the end cut off; levelled with the other sounds)
-  clCatch:{url:"sounds/sfx_cl_catch.wav", gain:0.275},   // half of 0.55 (2026-10-22, per Dan: the catch sound was too loud)
-  clFade:{url:"sounds/sfx_cl_fade.wav", gain:0.55},
+  clCatch:{url:"soundsb/sfx_cl_catch.wav", gain:0.275},   // half of 0.55 (2026-10-22, per Dan: the catch sound was too loud)
+  clFade:{url:"soundsb/sfx_cl_fade.wav", gain:0.55},
   // the Mission Complete screen (2026-10-22, per Dan): sound_effect_11 from the 8-Bit Sounds folder, with the silence at the end cut off (peak 0.84, so a low gain)
-  missionDone:{url:"sounds/sfx_mission_done.wav", gain:0.3},
+  missionDone:{url:"soundsb/sfx_mission_done.wav", gain:0.3},
   // picking up a word in Word Groups (2026-10-23, per Dan): sound_effect_4 from the Non 8-Bit Sounds folder (24-bit, with the silence before and after cut off:
   // 0.07 s), levelled with the other sounds
-  wgPick:{url:"sounds/sfx_wg_pick.wav", gain:0.5},
+  wgPick:{url:"soundsb/sfx_wg_pick.wav", gain:0.5},
   // the Golden Ticket appearing above the altar (2026-10-23, per Dan): sound_effect_12 from the 8-Bit Sounds folder, with the silent end cut off (1.6 s; peak 0.83, like the
   // Mission Complete sound, so the same low gain)
-  ticket:{url:"sounds/sfx_ticket.wav", gain:0.3},
+  ticket:{url:"soundsb/sfx_ticket.wav", gain:0.3},
   // Jacob's Ladder bounces (2026-10-24, per Dan), the silence before and after cut off: sound_effect_14 off a plain rung, _13 off a rung that breaks, _15 off a winged one
   jlBounce:{url:"sounds/sfx_jl_bounce.wav", gain:0.2},      // peak 0.95, and it is heard every second, so it is quiet
-  jlCrumble:{url:"sounds/sfx_jl_crumble.wav", gain:0.45},   // peak 0.56
-  jlSuper:{url:"sounds/sfx_jl_super.wav", gain:0.4},        // peak 0.70
-  jlFall:{url:"sounds/sfx_jl_fall.wav", gain:0.3},          // falling off the bottom of the sky (2026-10-24, per Dan): sound_effect_16, peak 0.99, in place of the Faith Match miss / last-chance sounds
+  jlCrumble:{url:"soundsb/sfx_jl_crumble.wav", gain:0.45},   // peak 0.56
+  jlSuper:{url:"soundsb/sfx_jl_super.wav", gain:0.4},        // peak 0.70
+  jlFall:{url:"soundsb/sfx_jl_fall.wav", gain:0.3},          // falling off the bottom of the sky (2026-10-24, per Dan): sound_effect_16, peak 0.99, in place of the Faith Match miss / last-chance sounds
   // the pilgrim going in at the church door, on the Main Menu and in each round of Pilgrim's Road (2026-10-26, per Dan): "Church Bell.wav" from the Non 8-Bit Sounds folder, 4.5 s of its
   // 15, faded out from 2.5 s (2026-10-26, per Dan: 12 s, then 6 s, were too long to wait), mono, 16-bit, 32 kHz so it is 0.3 MB instead of 4. The next screen waits for it to finish (pixAfterSfx).
-  churchBell:{url:"sounds/sfx_church_bell.wav", gain:1.2},
+  churchBell:{url:"soundsb/sfx_church_bell.wav", gain:1.2},
   // tapping a sheep on the Main Menu (2026-10-26, per Dan): "Sheep Baa 1.wav" or "Sheep Baa 2.wav" (Non 8-Bit Sounds folder, 1 s each, peak 0.37), picked at random, in place of the button sound
-  sheepBaa1:{url:"sounds/sfx_sheep_baa1.wav", gain:1.0},
-  sheepBaa2:{url:"sounds/sfx_sheep_baa2.wav", gain:1.0},
+  sheepBaa1:{url:"soundsb/sfx_sheep_baa1.wav", gain:1.0},
+  sheepBaa2:{url:"soundsb/sfx_sheep_baa2.wav", gain:1.0},
   // Hope Garden (2026-10-27, per Dan): sound_effect_17 (8-Bit Sounds folder; 4 s, made mono and 22 kHz so it is 0.2 MB) plays over and over, at a low volume, while two flying objects are in danger of crashing
-  hglDanger:{url:"sounds/sfx_hgl_danger.wav", gain:0.3},
+  hglDanger:{url:"soundsb/sfx_hgl_danger.wav", gain:0.3},
   // The Road to Emmaus baskets (2026-10-28, per Dan): sound_effect_18 off the small basket, sound_effect_19 off the big purple one (8-Bit Sounds folder, made mono, silence at the ends cut off; peaks 0.57 and 0.71)
-  emBasket1:{url:"sounds/sfx_em_basket1.wav", gain:0.45},
-  emBasket2:{url:"sounds/sfx_em_basket2.wav", gain:0.4},
+  emBasket1:{url:"soundsb/sfx_em_basket1.wav", gain:0.45},
+  emBasket2:{url:"soundsb/sfx_em_basket2.wav", gain:0.4},
   // The Road to Emmaus coins and hearts (2026-10-29, per Dan): Coin Pickup.wav and Heart Pickup.wav (8-Bit Sounds folder; made mono, the silence cut off, the coin's cut to 0.7 s, the heart's to 0.6 s)
-  emCoin:{url:"sounds/sfx_em_coin.wav", gain:0.22},
-  emHeart:{url:"sounds/sfx_em_heart.wav", gain:0.25},
-  emPerfect:{url:"sounds/sfx_em_perfect.wav", gain:0.3},         // the PERFECT! window (2026-10-29, per Dan): sound_effect_12 (8-Bit Sounds folder; made mono, the silence at both ends cut off, 1.5 s)
+  emCoin:{url:"soundsb/sfx_em_coin.wav", gain:0.22},
+  emHeart:{url:"soundsb/sfx_em_heart.wav", gain:0.25},
+  emPerfect:{url:"soundsb/sfx_em_perfect.wav", gain:0.3},         // the PERFECT! window (2026-10-29, per Dan): sound_effect_12 (8-Bit Sounds folder; made mono, the silence at both ends cut off, 1.5 s)
   // 2026-10-31, per Dan. The Road to Emmaus: moving_cart.wav (2.35 s) loops while the pilgrim rides a cart on the street, running.wav (8.4 s) loops while he runs on the street, and neither plays while he is in the air or on a cloud
   // (see emMoveSfxWant); sound_effect_13 when the cart hits the block and throws him. Dove of Peace: bird_flap.wav, once for each tap that lifts the dove. All made mono; the loops keep their whole length (so their rhythm holds), the one-shots have the silence at the ends cut off.
-  emCart:{url:"sounds/sfx_em_cart.wav", gain:0.9},                // peak 0.41
-  emRun:{url:"sounds/sfx_em_thump.wav", gain:1.7},                // soft thump loop for the pilgrim's footsteps, peak 0.55, so 0.93 at this gain (2026-11-01, replaces running.wav, per Dan; louder the next day: the gain was 0.9)
-  emCrash:{url:"sounds/sfx_em_crash.wav", gain:0.4},              // peak 0.56
+  emCart:{url:"soundsb/sfx_em_cart.wav", gain:0.9},                // peak 0.41
+  emRun:{url:"soundsb/sfx_em_thump.wav", gain:1.7},                // soft thump loop for the pilgrim's footsteps, peak 0.55, so 0.93 at this gain (2026-11-01, replaces running.wav, per Dan; louder the next day: the gain was 0.9)
+  emCrash:{url:"soundsb/sfx_em_crash.wav", gain:0.4},              // peak 0.56
   dpFlap:{url:"sounds/sfx_dp_flap.wav", gain:0.35},               // peak 0.99
   // 2026-11-05, per Dan (8-Bit Sounds folder; made mono, the silence at both ends cut off, a 10 ms fade at each end): "tile_fall.wav" when a plant falls into a column in Mustard Seed (0.39 s, peak 0.14; a gain of 2.5 first, then 20% quieter at Dan's word: 2.0, then 30% quieter again: 1.4, then 40% quieter on 2026-11-06: 0.84).
   // (Hope Garden's spawn arrow first had "bee _spawned.wav" here; the same day Dan changed it to Heart Pickup.wav, which is emHeart above.)
-  msFall:{url:"sounds/sfx_ms_fall.wav", gain:0.84}
+  msFall:{url:"soundsb/sfx_ms_fall.wav", gain:0.84}
 };
 var pixSfxBytes = {}, pixSfxBuf = {}, pixSfxDecoding = {}, pixSfxCurrent = null;
 
@@ -2502,11 +2599,23 @@ function pixSfxFetchOne(k, done){
   pixSfxFetching[k] = true;
   fetch(PIX_SFX[k].url, {priority: done ? "low" : "high"}).then(function(r){ return r.arrayBuffer(); }).then(function(ab){
     pixSfxBytes[k] = ab;
-    if(pixAudioCtx) pixSfxDecode(k);
+    if(pixAudioCtx) pixSfxDecode(k); else if(k === "tap") pixSfxPreDecode(k);          // (the engine does not exist before the first touch: the button sound is decoded without it)
     if(done) done();
   }).catch(function(){ pixSfxFetching[k] = false; if(done) done(); });
 }
 var pixSfxWaiters = {};
+// (2026-11-09, per Dan: the button sound of the first tap did not play.) The sound is fetched at once but was decoded only by the live audio engine, which is made at the first touch, so at that touch the sound was not ready.
+// An OfflineAudioContext decodes it with no live engine; the decoded picture of the sound is the same for any engine.
+function pixSfxPreDecode(k){
+  try {
+    var O = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if(!O || pixSfxBuf[k] || !pixSfxBytes[k]) return;
+    var oc = new O(1, 1, 44100);
+    var ok = function(buf){ if(buf && !pixSfxBuf[k]){ pixSfxBuf[k] = buf; var w = pixSfxWaiters[k] || []; pixSfxWaiters[k] = []; w.forEach(function(fn){ try { fn(buf); } catch(e){} }); } };
+    var p = oc.decodeAudioData(pixSfxBytes[k].slice(0), ok, function(){});
+    if(p && p.then) p.then(ok, function(){});
+  } catch(e){}
+}
 function pixSfxDecode(name, whenReady){
   if(pixSfxBuf[name]){ if(whenReady) whenReady(pixSfxBuf[name]); return; }
   if(whenReady) (pixSfxWaiters[name] = pixSfxWaiters[name] || []).push(whenReady);   // the very first tap waits here for its sound
@@ -2590,6 +2699,7 @@ function pixSfxPlayNow(name, exclusive){      // (pixSfxPlay, below the revive c
   // When the file then arrived, this played the pop as well, late. The button sound is therefore not played late: the blip was its stand-in. (Other sounds are still played when they are ready.)
   if(!buf){ pixSfxDecode(name, name === "tap" ? function(){} : function(){ pixSfxPlay(name, exclusive); }); return false; }
   try {
+    if(name === "tap"){ var nowTap = performance.now(); if(nowTap - (window.pixLastTapAt || 0) < 45) return true; window.pixLastTapAt = nowTap; }          // (one button sound for one tap: the touch and the click of the first tap both ask for it)
     if(ctx.state !== "running" && ctx.resume) ctx.resume();
     if(exclusive && pixSfxCurrent){ try { pixSfxCurrent.stop(); } catch(e){} }
     var src = ctx.createBufferSource(), gain = ctx.createGain();
@@ -2842,6 +2952,7 @@ function pixHoldForEngine(fn){
   pixReviveQueue.push(job); setTimeout(job, 700);
 }
 function pixSfxPlay(name, exclusive){
+  if(name === "fmLast") window.pixFmLastAt = performance.now();          // (when sound_effect_8 was last asked for: see the SO CLOSE! window)
   if(pixShouldHold()){ pixHoldForEngine(function(){ pixSfxPlayNow(name, exclusive); }); return false; }
   return pixSfxPlayNow(name, exclusive);
 }
@@ -2920,7 +3031,7 @@ function tapOnTouch(e){
   if(!e.isPrimary && !pixLoneTouch(e)){ try { dbgLog("tap: NOT TAKEN, the phone calls this touch not primary (" + tapDesc(e.target) + ", " + state.screen + ")"); } catch(err){} return; }
   var el = e.target && e.target.closest ? e.target.closest("[onclick]") : null;
   if(!el || el.disabled || el.getAttribute("aria-disabled") === "true" || el.classList.contains("disabled")) return;
-  if(el.hasAttribute("data-real")) return;   // (2026-11-08, per Dan) the SHARE buttons: the phone opens its share sheet only for the finger's own tap, not for a click made 0.1 s later by a timer, so the real click is left alone and goes straight to the button
+  if(el.hasAttribute("data-real")) return;   // (2026-11-09 HQ, per Dan) the SHARE buttons: the phone opens its share sheet only for the finger's own tap, not for a click made 0.1 s later by a timer, so the real click is left alone and goes straight to the button
   var pd = el.getAttribute("onpointerdown"), m = pd && TAP_SOUND_ONLY.exec(pd);
   if(pd && !m) return;                       // it acts on the touch by itself
   if(pixAudioStale){ var nm = m && /^\s*['"](\w+)['"]\s*$/.exec(m[1]); tapHeldSound = nm ? nm[1] : "tap"; }
@@ -3039,6 +3150,7 @@ function goldenTicketUnlocked(){
 var GUIDE_MISSIONS = ["faithFlash","faithMatch","stainedGlass","followLight","wordUnscramble","catchLight","fruitsSpirit",
   "jacobLadder","emojiStories","jesusTimeline","sacredSudoku","wordTrail","wordGroups","mustardSeed","prayBeads","pilgrimRoad","dovePeace","emmaus"];
 function openMission(id){
+  toastHide();
   track("mission_icon_tapped", {mission_id: id, from: state.folderOpen ? "folder" : "menu", completed: !!(state.missions[id] && state.missions[id].done)});
   // Every mission can always be played again (2026-11-05, per Dan; the temporary "tapping a finished mission clears it" is gone). A game that is already done gives no second badge, points or step for the pilgrim:
   // round 1 of a replay goes straight on to round 2 (see roundOneGrant), and finishing all the rounds goes back to the Main Menu (see grantMission).
@@ -3127,11 +3239,13 @@ function toast(text, ms){            // ms = how long it stays up (2600 unless a
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove("show"); }, ms || 2600);   // 2600 is long enough to read the longer messages
 }
+function toastHide(){ var el = document.getElementById("toast"); clearTimeout(toastTimer); if(el) el.classList.remove("show"); }          // (2026-11-09, per Dan) takes a message away at once
 function comingSoon(){ toast(t("comingSoonToast")); }
 function ticketLocked(){ track("golden_ticket_tapped", {locked: true}); toast(t("ticketLocked")(GOLDEN_TICKET_POINTS), 1560); }   // the "Earn 500 points..." message stays 40% less long than the 2600 ms it had (2026-10-22, per Dan)
 
 // ---- the Missions folder ----
 function openFolder(icon){
+  toastHide();          // (a message such as "Earn 500 points..." must not stay over the Missions window)
   track("missions_folder_opened");
   state.folderOpen = true; saveState(); render();
   // grow the panel out of the folder icon it came from
@@ -3172,6 +3286,7 @@ function folderHtml(){
 // ---- Passport / Golden Ticket: the icon's tile grows to fill the screen, then the screen appears ----
 var iconExpanding = false;
 function openFromIcon(icon, screenId){
+  toastHide();
   if(iconExpanding) return;
   var tile = icon.querySelector(".appTile");
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3307,6 +3422,7 @@ function petsInit(){
         else { s.x += dx / dist * step; s.y += dy / dist * step; if(Math.abs(dx) > 0.5) s.left = dx < 0; el.classList.add("walking"); }
       }
       petPlace(p, el);
+      if(pilgrimBubbleAnchor === el){ var pb = document.getElementById('pilgrimBubble'); if(pb && pb.classList.contains('show')) pilgrimBubblePlace(); }          // (the bubble follows its sheep)
     });
     if(alive) petsRaf = requestAnimationFrame(frame);
   }
@@ -3317,7 +3433,7 @@ function petsInit(){
 // (2026-11-06 HA, per Dan: the small bush behind the short fence at the right edge stands in front of it now: fence_front4.png is fence_front3.png with the bush's own pixels drawn over the fence)
 // (2026-11-06, per Dan) scene_world4.png is scene_world3.png with the small bush by the lower right fence moved in front of it: it was drawn behind the fence's pickets; now it stands in front, its base on the ground just below the fence
 function pilgrimSceneHtml(extra){
-  var lit = goldenTicketUnlocked();
+  var lit = goldenTicketUnlocked() && !!state.pilgrimIn;
   return '<div class="pixScene" id="pixScene"><div class="pixSceneBox" id="pixSceneBox">' +
     '<img class="pixSceneArt" src="tiles/scene_world4.png" alt="">' +
     '<div class="churchGlow' + (lit ? ' lit' : '') + '"></div>' +
@@ -3345,7 +3461,7 @@ function pilgrimPlace(el, f, sign){
   el.style.top = ((p.y - (PILGRIM_H - 1) * sc) / SCENE_H * 100) + "%";
   if(Math.abs(p.dx) > 0.05){
     if(sign) pilgrimFaceLeft = (p.dx * sign < 0);
-    else if(pilgrimFaceLeft === null) pilgrimFaceLeft = false;          // (Italian copy, 2026-11-08, per Dan: he stands facing right when first placed, whichever way the bend he starts on runs; he turns as soon as he walks)
+    else if(pilgrimFaceLeft === null) pilgrimFaceLeft = false;          // (2026-11-09 HQ, per Dan: he stands facing right when first placed, whichever way the bend he starts on runs; he turns as soon as he walks)
   }
   var flip = el.firstChild;
   if(flip) flip.classList.toggle("left", !!pilgrimFaceLeft);
@@ -3358,7 +3474,7 @@ function pilgrimNextGame(){
 function pilgrimMessages(){
   var list = [], left = PILGRIM_GAMES_TOTAL - pilgrimSteps();
   var next = pilgrimNextGame();
-  if(goldenTicketUnlocked()) list.push(t("pilgrimTicket"));
+  if(goldenTicketUnlocked() && clearMissionsDue()) list.push(t("pilgrimTicket"));
   else if(state.points === 0) list.push(t("pilgrimStart"));
   if(next) list.push(t("pilgrimTry")(t(next.nameKey)));
   if(left > 0) list.push(t("pilgrimToGo")(left));
@@ -3437,7 +3553,7 @@ function pilgrimEnter(el){
     if(el.isConnected) el.style.visibility = "hidden";
     pixAfterSfx("churchBell", function(){
       if(el.isConnected) pilgrimBusy(el, false);
-      if(!goldenTicketUnlocked() && state.screen === "mainMenu") go("churchWalk");        // inside: up the aisle to the altar, and the Golden Ticket
+      if(ticketWalkDue() && state.screen === "mainMenu") go("churchWalk");        // inside: up the aisle to the altar, and the Golden Ticket
     });
   }, 950);
 }
@@ -3452,12 +3568,12 @@ function pilgrimEnter(el){
 // picture pixels and ticketAspect its height over its width).
 var CW = {W: 125, H: 270, x: 62.5, yStart: 274, yEnd: 206, dur: 4400, ticketAt: .75, ticketMs: 5500, scaleNear: 2.3, scaleFar: .55, ticketW: 92, ticketAspect: 700 / 1100, ticketY: 90};
 // The Golden Ticket picture has the words on it, so Spanish has its own (BOLETO DORADO, 2026-11-05, per Dan).
-function ticketPic(){ return state.lang === "es" ? "tiles/golden_ticket_es.png" : "tiles/golden_ticket.png"; }
-function cwPreload(){ ["tiles/pilgrim_back.png", ticketPic(), "tiles/church_interior2.png"].forEach(function(src){ var im = new Image(); im.src = src; }); }
+function ticketPic(){ return ticketPicN(Math.max(1, ticketCount())); }
+function cwPreload(){ ["tiles/pilgrim_back.png", ticketPicN(cwTicketNum()), "tiles/church_interior2.png"].forEach(function(src){ var im = new Image(); im.src = src; }); }
 function screenChurchWalk(){
   var tw = CW.ticketW, th = tw * CW.ticketAspect;
   return '<div class="screen pixHome pixChurch cwScreen"><div class="cwScene" id="cwScene">' +
-    '<img class="cwTicket" id="cwTicket" src="' + ticketPic() + '" alt="" style="left:' + ((CW.x - tw / 2) / CW.W * 100) + '%;top:' + ((CW.ticketY - th / 2) / CW.H * 100) + '%;width:' + (tw / CW.W * 100) + '%">' +
+    '<img class="cwTicket" id="cwTicket" src="' + ticketPicN(cwTicketNum()) + '" alt="" style="left:' + ((CW.x - tw / 2) / CW.W * 100) + '%;top:' + ((CW.ticketY - th / 2) / CW.H * 100) + '%;width:' + (tw / CW.W * 100) + '%">' +
     '<div class="cwPilgrim walking" id="cwPilgrim"><div class="cwSprite"></div></div>' +
   '</div></div>';
 }
@@ -3511,11 +3627,20 @@ function cwConfetti(tk){
 }
 // Confetti on the ROUND X COMPLETED! screens and on the badge screen (2026-11-05, per Dan): the same paper strips as the Golden Ticket's, a smaller burst from the middle of the screen and a rain from the top, for about 4 seconds.
 // It lies over the screen and never takes a touch. It stops by itself, and at once if another screen comes up. (Called from phWatch when a round is completed, and from renderApply when the badge screen comes up.)
-var pxConfettiRaf = 0, pxConfettiCv = null, pxConfettiFn = null, pxRoundKey = "", pxBadgeShown = false;
+var pxConfettiRaf = 0, pxConfettiCv = null, pxConfettiFn = null, pxRoundKey = "", pxBadgeShown = false, pxSoCloseShown = false;
 function pixConfettiStop(){
   cancelAnimationFrame(pxConfettiRaf); pxConfettiRaf = 0; pxConfettiFn = null;
+  try { [].forEach.call(document.querySelectorAll(".shareWait"), function(e){ e.classList.remove("shareWait"); }); } catch(e){}          // (the SHARE button of the Badge Reward screen comes when the confetti is done)
   if(pxConfettiCv && pxConfettiCv.parentNode) pxConfettiCv.parentNode.removeChild(pxConfettiCv);
   pxConfettiCv = null;
+}
+// where the burst of confetti starts: the center of the message window on the screen (2026-11-10, per Dan); the middle of the screen if there is no window
+function pixConfettiOrigin(vw, vh){
+  try {
+    var w = document.querySelector(".pixRoundDone[data-rd]") || document.querySelector(".pixResMid .pixPaper") || document.querySelector(".pixPaper");
+    if(w){ var r = w.getBoundingClientRect(); if(r.width > 20 && r.height > 20) return {x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height}; }
+  } catch(e){}
+  return {x: vw / 2, y: vh * .45, w: vw * .3, h: 0};
 }
 function pixConfettiParty(){
   try {
@@ -3526,14 +3651,14 @@ function pixConfettiParty(){
     cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
     document.body.appendChild(cv); pxConfettiCv = cv;
     var g = cv.getContext("2d"); g.scale(dpr, dpr);
-    var colors = ["#FFC93A", "#FFE27A", "#E8433B", "#3B82E8", "#3FBF5F", "#F28AC0", "#FFFFFF", "#8A5CE0", "#FF8A2B"], bits = [], i, a, sp;
+    var colors = ["#FFC93A", "#FFE27A", "#E8433B", "#3B82E8", "#3FBF5F", "#F28AC0", "#FFFFFF", "#8A5CE0", "#FF8A2B"], bits = [], i, a, sp, org = pixConfettiOrigin(vw, vh);
     function add(x, y, vx, vy, delay){
       bits.push({x: x, y: y, vx: vx, vy: vy, w: (6 + Math.random() * 8) * k, h: (3 + Math.random() * 5) * k, rot: Math.random() * 6.28, vr: (Math.random() - .5) * 14,
         flip: Math.random() * 6.28, vf: 4 + Math.random() * 8, c: colors[Math.floor(Math.random() * colors.length)], delay: delay || 0});
     }
     for(i = 0; i < 70; i++){                                                                // the burst: a wide fan, mostly upwards, from the middle of the screen
       a = -Math.PI / 2 + (Math.random() - .5) * Math.PI * 1.4; sp = (220 + Math.random() * 520) * k;
-      add(vw / 2 + (Math.random() - .5) * vw * .3, vh * .45, Math.cos(a) * sp, Math.sin(a) * sp, 0);
+      add(org.x + (Math.random() - .5) * org.w * .2, org.y + (Math.random() - .5) * org.h * .12, Math.cos(a) * sp, Math.sin(a) * sp, 0);          // (from the center of the message window)
     }
     for(i = 0; i < 90; i++) add(Math.random() * vw, -20 - Math.random() * 60 * k, (Math.random() - .5) * 90 * k, (60 + Math.random() * 140) * k, .4 + Math.random() * 1.6);      // the rain
     var last = performance.now(), t = 0;
@@ -3560,9 +3685,21 @@ function pixConfettiParty(){
 function cwFinish(){
   cwRunning = false; cancelAnimationFrame(cwRaf); clearTimeout(cwTimer); cwConfettiStop();
   if(state.screen !== "churchWalk") return;
-  state.ticketUnlocked = true; saveState();
-  track("golden_ticket_unlocked", {seconds_since_open: phSecs(phT0)});
+  state.tickets = Math.min(2, ticketCount() + 1); state.ticketUnlocked = true; saveState();
+  track("golden_ticket_unlocked", {seconds_since_open: phSecs(phT0), ticket: state.tickets});
   go("mainMenu");                      // the ticket icon is unlocked now
+}
+// where the ticket goes: halfway between the top of the screen and the top of the cross (row 114 of the church picture)
+var CW_CROSS_TOP = 114;
+function cwPlaceTicket(tk){
+  try {
+    var scr = document.querySelector(".cwScreen"), sc = document.getElementById("cwScene"); if(!scr || !sc || !tk) return;
+    var sr = scr.getBoundingClientRect(), cr = sc.getBoundingClientRect(), k = cr.width / CW.W;          // k = screen pixels in one picture pixel
+    var topPic = (sr.top - cr.top) / k, gap = CW_CROSS_TOP - topPic;                                    // the top of the screen in picture pixels (below 0: ceiling above the picture)
+    if(!(gap > 20)) return;                                                                            // (the cross is not in view, as on a phone on its side: the old place stays)
+    var tw = Math.min(CW.ticketW, (gap - 8) / CW.ticketAspect), th = tw * CW.ticketAspect, mid = (topPic + CW_CROSS_TOP) / 2;
+    tk.style.width = (tw / CW.W * 100) + "%"; tk.style.left = ((CW.x - tw / 2) / CW.W * 100) + "%"; tk.style.top = ((mid - th / 2) / CW.H * 100) + "%";
+  } catch(e){}
 }
 function cwStart(){
   if(cwRunning) return;
@@ -3584,6 +3721,7 @@ function cwStart(){
     if(p < 1) pilgrimStepSfx(now);
     if(!shown && p >= CW.ticketAt){
       shown = true;
+      cwPlaceTicket(tk);
       if(tk) tk.classList.add("show");
       pixSfxPlay("ticket", true);                                  // sound_effect_12
       cwConfetti(tk);                                              // a big burst of confetti (2026-11-01, per Dan)
@@ -3738,6 +3876,7 @@ function installTap(){
 }
 function instRefresh(){ if(state.screen === "welcome" || state.screen === "options") render(); }
 function installShow(){
+  toastHide();
   if(document.getElementById("instOverlay")) return;
   track("install_help_opened", {platform: instPlatform() || "other"});
   var plat = instPlatform(), share = '<svg class="instShare" viewBox="0 0 24 24" fill="none" stroke="#1E2F7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
@@ -3763,7 +3902,7 @@ function screenMainMenu(){
   var unlocked = goldenTicketUnlocked();
   var mini = ["faithFlash", "faithMatch", "dovePeace", "stainedGlass"].map(function(id){ return iconSpr(id); }).join("");
   var icons =
-    appIconHtml({onclick:"openFolder(this)", bg:"rgba(255,255,255,.42)", cls:"folderIcon", inner:'<div class="miniGrid">' + mini + '</div>',
+    appIconHtml({onclick:"openFolder(this)", bg:"#8EC6F5", cls:"folderIcon", inner:'<div class="miniGrid">' + mini + '</div>',
       label:t("missionsFolder"), badge:'<span class="countBadge">' + doneCount + '/' + inFolder.length + '</span>'}) +
     appIconHtml({onclick:"openFromIcon(this,'passport')", bg:ICON_BG.passport, inner:iconSpr("passport"), label:t("passport")}) +
     appIconHtml({onclick:unlocked ? "openFromIcon(this,'goldenTicket')" : "ticketLocked()", bg:unlocked ? ICON_BG.goldenTicket : ICON_BG.lock,
@@ -3772,7 +3911,7 @@ function screenMainMenu(){
   return '<div class="screen pixHome pixSky pixMenu' + (state.howSeen ? '' : ' howOpen') + '">' +
     cloudsHtml() +
     '<button class="backBtn" onclick="goBackToWelcome()" aria-label="' + t("backLabel") + '"><img src="tiles/icons48p/ic_back.png" alt=""></button>' +
-    '<h1 class="pixMenuTitle" aria-label="Fe y Vida Quest"><img class="pixMenuLogo" src="tiles/logo_small.png" alt=""></h1>' +
+    '<h1 class="pixMenuTitle" role="button" tabindex="0" onclick="fvOpen()" aria-label="Fe y Vida"><img class="pixMenuLogo" src="tiles/logo_small.png" alt=""></h1>' +
     '<div class="progressWrap">' +
       '<div class="progressBar"><div class="progressFill" style="width:' + pct + '%"></div></div>' +
       '<div class="progressLabel">' + state.points + ' / ' + GOLDEN_TICKET_POINTS + ' ' + t("questPoints") + '</div>' +
@@ -3874,7 +4013,7 @@ function screenAward(){
   var m = MISSIONS.filter(function(x){ return x.id === state.awardMissionId; })[0];
   if(!m) return screenMainMenu();
   return pixResultHtml(m.nameKey, {cls:"pixLower pixTitlePin", title:t("awardTitle"), body:m.noBadge ? t("awardBodyJoy") : missionIsGame(m.id) ? t("awardBody")(100, t(m.themeKey)) : t("awardBodyNoPts")(t(m.themeKey)), badge:m.noBadge ? null : m.id,
-    buttons: m.noBadge ? "" : (awardHeld ? pixBtnHtml(t("shareContinue"), "awardContinue()") : "") + '<div class="shareRow">' + shareBtnHtml("badge", m.id, "award") + '</div>'});
+    buttons: ""});          // (no SHARE button on the Badge Reward screen, 2026-11-10, per Dan: it times out to KEEP GOING)
 }
 function awardContinue(){ awardHeld = false; if(awardLeaveFn) awardLeaveFn(); else afterAward(); }
 
@@ -4169,12 +4308,14 @@ function pixBtnHtml(label, js, secondary){
 
 // A won / lost screen: the mission's name, a cream card (with the 8-bit badge when won), then the buttons.
 // o = {title, body, badge: mission id or nothing, buttons}
+var PIX_FAIL_KEYS = ["fm_failTitle", "fl_failTitle", "wu_failTitle", "cl_failTitle", "ks_failTitle", "eb_failTitle", "tl_failTitle", "wt_failTitle", "ms_failTitle", "pb_failTitle", "dp_failTitle", "jl_failTitle", "hg_failTitle", "hg_outTitle"];
+function pixIsFailTitle(s){ for(var i = 0; i < PIX_FAIL_KEYS.length; i++){ if(t(PIX_FAIL_KEYS[i]) === s) return true; } return false; }          // (a window that says the game was lost)
 function pixResultHtml(nameKey, o){
   var m = o.badge ? missionById(o.badge) : null;
   // the game's name sits just above the window in the instruction screens' larger type, the pair centred together (2026-10-22, per Dan)
   return pixShell('<div class="pixResMid"><h2 class="pixMTitle pixIntroTitle">' + t(nameKey) + '</h2><div class="pixPaper">' +
       (m ? '<img class="pixResBadge" src="' + badge8Src(m) + '" alt="" decoding="sync">' : '') +
-      '<div class="pixResTitle">' + o.title + '</div>' +
+      '<div class="pixResTitle"' + (pixIsFailTitle(o.title) ? ' data-soclose="1"' : '') + '>' + o.title + '</div>' +
       '<p class="pixResBody">' + o.body + '</p>' +
     '</div></div>' + o.buttons, o.cls);
 }
@@ -4208,7 +4349,7 @@ function screenFaithFlash(){
     return '<div class="screen pixHome pixSky pixMission pixLower">' + cloudsHtml() +
       '<div class="pixResMid"><h2 class="pixMTitle pixIntroTitle">' + t("faithFlashName") + '</h2><div class="pixPaper">' +
         (pass ? '<img class="pixResBadge" src="tiles/badges96/b96_faith.png" alt="" decoding="sync">' : '') +
-        '<div class="pixResTitle">' + (perfect ? t("ff_resultsTitlePass") : (pass ? t("ff_resultsTitlePass2") : t("ff_resultsTitleFail"))) + '</div>' +
+        '<div class="pixResTitle"' + (!pass ? ' data-soclose="1"' : '') + '>' + (perfect ? t("ff_resultsTitlePass") : (pass ? t("ff_resultsTitlePass2") : t("ff_resultsTitleFail"))) + '</div>' +
         '<p class="pixResBody">' + (perfect ? t("ff_resultsBodyPass") : (pass ? t("ff_resultsBodyPass2") : t("ff_resultsBodyFail"))) + '</p>' +
         // Denominator is how many questions were actually ANSWERED (s.index+1
         // -- s.index is still the failed question's own 0-based index when a
@@ -4581,10 +4722,27 @@ function initFollowLightRun(){
   flSetupLevel(0);
 }
 
+// a random pattern of `len` tiles (0 to 8): never the same tile twice in a row, and every tile of the grid is used about equally (a tile is picked from those least used so far), and never the same as `prev`
+function flRandomPattern(len, prev){
+  for(var tries = 0; tries < 20; tries++){
+    var pat = [], used = [0,0,0,0,0,0,0,0,0];
+    for(var i = 0; i < len; i++){
+      var low = Math.min.apply(null, used), pool = [];
+      for(var t = 0; t < FL_GRID_TILES; t++){ if(used[t] <= low + (i < 5 ? 0 : 1) && t !== pat[i - 1]) pool.push(t); }
+      if(!pool.length){ for(var t2 = 0; t2 < FL_GRID_TILES; t2++){ if(t2 !== pat[i - 1]) pool.push(t2); } }
+      var pick = pool[Math.floor(Math.random() * pool.length)];
+      pat.push(pick); used[pick]++;
+    }
+    var same = prev && prev.length >= pat.length;
+    if(same){ for(var k = 0; k < pat.length; k++){ if(prev[k] !== pat[k]){ same = false; break; } } }
+    if(!same) return pat;
+  }
+  return pat;
+}
 function flSetupLevel(levelIdx){
   var s = state.session.followLight;
   var patternLen = FL_LEVELS[levelIdx];
-  var pattern = FL_HYMNS[FL_LEVEL_HYMN[levelIdx % FL_LEVEL_HYMN.length]].notes.slice(0, patternLen);
+  var pattern = flRandomPattern(patternLen, s.pattern);          // (2026-11-10, per Dan: a new random pattern each level and each game, not a hymn's fixed notes)
   s.level = levelIdx;
   s.tiles = shuffle(MATCH_SYMBOLS).slice(0, FL_GRID_TILES);
   s.pattern = pattern;
@@ -4936,7 +5094,25 @@ function wuPick(letterPos){
   var e = wuFirstEmpty(s);
   if(e < 0) return;
   s.slots[e] = letterPos;
+  if(s.letters[letterPos] !== s.word.charAt(e)){ wuWrongLetter(s, e); return; }          // (2026-11-10, per Dan: a letter in the wrong square costs a heart)
   if(wuFirstEmpty(s) < 0) wuCheck(s); else { saveState(); render(); }
+}
+// a letter in a square where it does not belong: the heart goes, the square turns red and shakes, then the letter goes back to the row (2026-11-10, per Dan)
+function wuWrongLetter(s, e){
+  var wait = pixSfxWait("fmFirst", WU_SFX_EARLY_MS);
+  s.feedback = "wrong"; s.wrongSlot = e;
+  s.chances = Math.max(0, s.chances - 1);
+  pixAfterSfx("fmFirst", function(){ pixSfxPlay("clFade", true); }, WU_SFX_EARLY_MS);
+  saveState(); render();
+  setTimeout(function(){
+    var s2 = state.session.wordUnscramble;
+    if(!s2 || s2 !== s || s2.feedback !== "wrong") return;
+    s2.wrongSlot = null;
+    if(s2.chances <= 0){ s2.feedback = null; s2.status = "failed"; saveState(); render(); return; }       // the last heart: the SO CLOSE! screen (its sound_effect_8 is played by the screen itself: see change 49)
+    if(s2.hinted.indexOf(e) === -1) s2.slots[e] = null;
+    s2.feedback = null;
+    saveState(); render();
+  }, 800 + wait);
 }
 // tapping a letter that has been placed sends it back to the row of letters (not one placed by a hint)
 function wuUnplace(i){
@@ -5082,18 +5258,18 @@ function screenWordUnscramble(){
   }
 
   wuEnsure(s); wuEnsureSkips(s);
-  var rowCls ="pixWuRow" + (s.feedback ? " " + s.feedback : "");
+  var rowCls ="pixWuRow" + (s.feedback && !(s.feedback === "wrong" && typeof s.wrongSlot === "number") ? " " + s.feedback : "");          // (one wrong letter reddens its own square only)
   var slotsHtml = "";
   for(var i=0;i<s.word.length;i++){
     var filled = s.slots[i] !== null, hinted = s.hinted.indexOf(i) !== -1;
     var tappable = filled && !hinted && !s.feedback;      // a placed letter goes back to the row when it is tapped
-    slotsHtml += '<div class="pixSlot' + (filled?' filled':'') + (hinted?' hinted':'') + '"' + (tappable ? ' role="button" onclick="wuUnplace(' + i + ')"' : '') + '>' + (filled ? s.letters[s.slots[i]] : "") + '</div>';
+    slotsHtml += '<div class="pixSlot' + (filled?' filled':'') + (hinted?' hinted':'') + (s.feedback === "wrong" && s.wrongSlot === i ? ' wrongOne' : '') + '"' + (tappable ? ' role="button" onclick="wuUnplace(' + i + ')"' : '') + '>' + (filled ? s.letters[s.slots[i]] : "") + '</div>';
   }
   var trayHtml = s.letters.map(function(ch, pos){
     var used = s.slots.indexOf(pos) !== -1;
     // Word Scramble's own sounds (2026-10-22, per Dan): a letter = sound_effect_10 (fmFirst), CLEAR = sound_effect_9 (fmMiss), HINT = sound_effect_1 (clCatch),
     // SKIP = sound_effect_2 (clFade); data-sfx="own" keeps the page-wide button sound from playing as well
-    return '<button class="pixTile' + (used?' used':'') + '" data-sfx="own" onpointerdown="pixPressSfx(\'fmFirst\')" onclick="pixClickSfx(\'fmFirst\');wuPick(' + pos + ')">' + ch + '</button>';
+    return '<button class="pixTile' + (used?' used':'') + (s.feedback ? ' locked' : '') + '" data-sfx="own" onpointerdown="pixPressSfx(\'fmFirst\')" onclick="pixClickSfx(\'fmFirst\');wuPick(' + pos + ')">' + ch + '</button>';
   }).join("");
 
   return '<div class="screen pixHome pixSky pixMission pixLower">' + cloudsHtml() +
@@ -5110,7 +5286,7 @@ function screenWordUnscramble(){
     '</div>' +
     '<div class="pixTray">' + trayHtml + '</div>' +
     '<div class="spacer"></div>' +
-    '<button class="btn pixBtn pixBtnSm" data-sfx="own" onpointerdown="pixPressSfx(\'fmMiss\')" onclick="pixClickSfx(\'fmMiss\');wuClear()">' + t("clearWord") + '</button>' +
+    '' +          // (no CLEAR button, 2026-11-10, per Dan)
     (s.feedback === "correct" ? '<div class="pixFlash"></div>' : '') +
   '</div>';
 }
@@ -7103,6 +7279,7 @@ function msFit(){
     var byW = (Math.min(area.clientWidth, 380) - 22 - (n - 1) * 5) / n;
     return Math.floor(Math.min(byH, byW, 62));
   }
+  area.style.setProperty("--msDrop", "0px");          // (measure without the shift)
   area.classList.remove("noLegend");
   var cell = solve();
   if(cell < 34){ area.classList.add("noLegend"); cell = solve(); }          // a short screen: the stage guide goes so the squares can stay big enough
@@ -7114,6 +7291,8 @@ function msFit(){
     if(Math.abs(extra) < .5) break;
     mt = Math.max(0, mt + extra); bar.style.marginTop = mt + "px";
   }
+  var brEnd = bar.getBoundingClientRect(), room = Math.max(0, vh - 6 - brEnd.bottom);
+  area.style.setProperty("--msDrop", Math.min(20, room) + "px");          // (2026-11-09, per Dan: the legend squares touched the bottom of the play area: they and DROP TILE go 20 px lower, if the screen has room)
   msPlace();
 }
 pixFitSoon("mustardSeed", msFit);
@@ -9865,7 +10044,7 @@ document.addEventListener("pointerdown", function(e){
 }, true);
 
 // ---- screens ----
-function hgOpen(){ track("mission_icon_tapped", {mission_id: "hopeGarden", from: "menu", completed: false}); state.session.hopeGarden = null; hg = null; go("hopeGardenIntro"); }
+function hgOpen(){ toastHide(); track("mission_icon_tapped", {mission_id: "hopeGarden", from: "menu", completed: false}); state.session.hopeGarden = null; hg = null; go("hopeGardenIntro"); }
 function hgStart(){ state.introMission = "hopeGarden"; go("missionIntro"); }          // PLAY HOPE GARDEN opens the instruction screen first, like the games (2026-11-02, per Dan); START MISSION there calls hgPlay
 function hgPlay(){ state.introMission = null; state.session.hopeGarden = null; hg = null; hgl = null; go("hopeGardenL"); }          // (stage 1 of the landscape game; the upright one is still in this file, saved as Hope Garden v1)
 function hgTryAgain(){ initHopeGarden(); render(); }                                                   // PLAY AGAIN after winning: from round 1
@@ -12162,6 +12341,7 @@ var pzFitTries = 0;
 var PZ_TRAY_PAD = 10;           // room around a tray piece for its knobs
 var PZ_SNAP_MIN = 24;           // snap distance is half the short side, but at least this
 var PZ_LIFT = 36;               // a held piece rides this far above the finger
+var PZ_CHANCES = 5;          // chance hearts for the whole game (2026-11-10, per Dan)
 var PZ_SOLVED_MS = 3000;        // how long the finished picture is shown
 var pzAdvancing = false;        // true while the "solved" hold is pending
 var pzCtx = null;               // geometry of the board currently on screen
@@ -12263,7 +12443,7 @@ function initStainedGlass(){
   for(var i=0;i<PZ_LEVELS.length;i++) seeds.push(1 + Math.floor(Math.random()*2000000000));
   state.session.stainedGlass = {
     round: 0, imgs: shuffle(PZ_POOL).slice(0, PZ_LEVELS.length),
-    seeds: seeds, placed: [], status: "playing"
+    seeds: seeds, placed: [], status: "playing", chances: PZ_CHANCES
   };
   saveState();
 }
@@ -12336,6 +12516,7 @@ function pzUp(ev){
   } else {
     d.el.style.transition = "transform .2s ease";
     pzSetPos(d.el, piece.tx, piece.ty, piece.k);
+    pzLoseChance(s, d);          // (2026-11-10, per Dan: a piece that snaps back from the picture costs a heart)
     pixSfxPlay("fmMiss", false);                                       // a piece dropped in the wrong place goes back to the tray: the Faith Match miss sound (2026-11-01, per Dan)
   }
 }
@@ -12404,7 +12585,7 @@ function pzAdvance(){
   if(state.screen === "stainedGlass") render();
 }
 function pzInterlude(){
-  pixRoundRun("stainedGlass", function(){ return state.session.stainedGlass; }, null,
+  pixRoundRun("stainedGlass", function(){ return state.session.stainedGlass; }, function(s2){ if(typeof s2.chances !== "number") s2.chances = PZ_CHANCES; if(s2.chances >= PZ_CHANCES) return false; s2.chances++; return true; },          // (a heart comes back if one was lost, 2026-11-10, per Dan)
     function(s){
       var last = s.interlude.final;
       s.interlude = null;
@@ -12414,6 +12595,22 @@ function pzInterlude(){
     });
 }
 
+// a piece let go over the picture (its centre inside the frame) but not in its own place costs a heart; one put back into the tray does not
+function pzLoseChance(s, d){
+  try {
+    var cx = d.x + pzCtx.pw / 2, cy = d.y + pzCtx.ph / 2;
+    if(!(cy < PZ_W && cx > 0 && cx < PZ_W)) return;
+    if(typeof s.chances !== "number") s.chances = PZ_CHANCES;
+    if(s.chances <= 0) return;
+    s.chances--; saveState();
+    var hb = document.getElementById("pzHearts"); if(hb) hb.innerHTML = chancesHeartsHtml(Math.max(0, s.chances), PZ_CHANCES);
+    if(s.chances <= 0){
+      s.status = "failed"; saveState();          // the last heart: the piece goes back to the tray first, then the Out of Chances! window comes
+      setTimeout(function(){ var s2 = state.session.stainedGlass; if(s2 === s && s2.status === "failed" && state.screen === "stainedGlass") render(); }, 700);
+    }
+  } catch(e){}
+}
+function pzTryAgain(){ pzCtx = null; pzDrag = null; initStainedGlass(); go("stainedGlass"); }
 function pzCollectAward(){ state.session.stainedGlass = null; grantMission("stainedGlass"); }
 function pzQuit(){ state.session.stainedGlass = null; pzCtx = null; pzDrag = null; go("mainMenu"); }
 
@@ -12430,6 +12627,11 @@ function screenStainedGlass(){
     return pixShell('<div class="spacer"></div><div class="pixPaper loadWait"><div class="pixQ">' + t("fm_loading") + '</div></div><div class="spacer"></div>');
   }
 
+  if(typeof s.chances !== "number") s.chances = PZ_CHANCES;          // (a game saved before the hearts existed gets all 5)
+  if(s.status === "failed"){
+    return pixResultHtml("stainedGlassName", {cls:"pixLower", title:t("fm_failTitle"), body:t("wu_failBody"),
+      buttons:pixBtnHtml(t("tryAgain"), "pzTryAgain()") + pixBtnHtml(t("mainMenu"), "pzQuit()", true)});
+  }
   if(s.status === "passed"){
     return pixResultHtml("stainedGlassName", {title:t("pz_passTitle"), body:t("pz_passBody"), badge:"stainedGlass",
       buttons:pixBtnHtml(t("collectAward"), "pzCollectAward()")});
@@ -12437,6 +12639,7 @@ function screenStainedGlass(){
 
   if(s.interlude){
     return pixShell('<h2 class="pixMTitle">' + t("stainedGlassName") + '</h2>' +
+      '<div class="pixChances"><span class="pixNote">' + t("chancesLeft") + '</span>' + chancesHeartsHtml(Math.max(0, s.chances), PZ_CHANCES) + '</div>' +
       pixRoundDoneHtml(s.interlude));
   }
 
@@ -12477,8 +12680,9 @@ function screenStainedGlass(){
     pixPipsHtml(PZ_LEVELS.length, s.round, solved ? "done" : "now", t("pz_round")(s.round+1, PZ_LEVELS.length)) +
     '<div class="pixNote">' + t("pz_round")(s.round+1, PZ_LEVELS.length) + ' &nbsp;|&nbsp; <span id="pzProgress">' + t("pz_pieces")(solved ? g.n : s.placed.length, g.n) + '</span></div>' +
     '<div class="pzNoteBox' + (solved ? ' solved' : '') + '"><div class="pixNote">' + t("pz_intro") + '</div><div class="pixNote good">' + t("pz_solved") + '</div></div>' +
+    '<div class="pixChances pzHearts" id="pzHearts">' + chancesHeartsHtml(Math.max(0, s.chances), PZ_CHANCES) + '</div>' +          // the 5 hearts between the instruction and the picture (2026-11-10, per Dan)
     svg +
-    '<div class="spacer"></div>');
+    '<div class="spacer"></div>', "pzHeartsScreen");
 }
 
 /* ---------- Passport ---------- */
@@ -12505,8 +12709,8 @@ function passportTouchEnd(ev){
   if(passportTouchStartX === null) return;
   var dx = ev.changedTouches[0].clientX - passportTouchStartX;
   passportTouchStartX = null;
-  if(dx > 40) passportNav(-1);
-  else if(dx < -40) passportNav(1);
+  if(dx > 40){ pixPressSfx(); pixClickSfx(); passportNav(-1); }          // (2026-11-10, per Dan: the same pop as the arrow buttons)
+  else if(dx < -40){ pixPressSfx(); pixClickSfx(); passportNav(1); }
 }
 
 // Test aid (2026-10-19, per Dan): while true, every Passport badge page shows its badge as earned, so all the 8-bit badges can be checked.
@@ -12583,6 +12787,8 @@ function shareCloud(ctx, cx, cy, u){
   [[-3, 0, 6], [-4, 1, 8], [-2, -1, 4], [-1, -2, 2], [-4, 2, 8]].forEach(function(r){ ctx.fillRect(cx + r[0] * u, cy + r[1] * u, r[2] * u, u); });
   ctx.fillStyle = "#DCEEFF"; ctx.fillRect(cx - 4 * u, cy + 3 * u, 8 * u, u);
 }
+var shareBlobs = {};          // the cards that are finished (the picture itself), by the same key as shareCache
+function shareKey(pack){ return pack.kind + ":" + (pack.id || "") + ":" + (state.lang || "en") + ":" + (state.missions[pack.id] && state.missions[pack.id].full ? "f" : ""); }
 // the picture card, 1080 x 1350: the pixel sky, the name of the game, a cream card with the badge (or the ticket, or a few badges for the app), and the address
 var shareBlobs = {};          // the cards that are finished (the picture itself), by the same key as shareCache
 function shareKey(pack){ return pack.kind + ":" + (pack.id || "") + ":" + (state.lang || "en") + ":" + (state.missions[pack.id] && state.missions[pack.id].full ? "f" : ""); }
@@ -12643,7 +12849,7 @@ function shareDo(kind, id, where){
   track("share_tapped", {where: where, kind: pack.kind, mission_id: pack.id, full: !!(pack.id && state.missions[pack.id] && state.missions[pack.id].full)});
   var result = function(r){ track("share_result", {where: where, kind: pack.kind, mission_id: pack.id, result: r}); };
   var fail = function(e){ if(e && e.name === "AbortError"){ result("cancelled"); return; } shareCopy(pack, where); };     // the player closed the sheet: nothing more; any other trouble: the link is copied
-  // (2026-11-08, per Dan: SHARE on the badge screen, while the confetti was flying, showed the COPY THIS LINK box instead of the iPhone's share sheet.) The iPhone opens its share sheet only when it is asked for at
+  // (2026-11-09 HQ, per Dan: SHARE on the badge screen, while the confetti was flying, showed the COPY THIS LINK box instead of the iPhone's share sheet.) The iPhone opens its share sheet only when it is asked for at
   // the moment of the tap. This used to wait for the picture card to be drawn first, and with the confetti running that took longer than the phone allows, so the request was refused and the link box came instead.
   // Now the sheet is asked for at once: with the picture card if it is finished by now (it is drawn ahead, see shareWarm), and without the picture (the words and the link) if it is not; it is then drawn for the next tap.
   var blob = shareBlobs[shareKey(pack)] || null;
@@ -12665,7 +12871,7 @@ function shareBtnHtml(kind, id, where, label, fit){
 function shareTap(kind, id, where){
   if(where === "award"){      // the badge screen leaves by itself after its 2.5 s: a player who shares keeps it until CONTINUE
     awardHeld = true; clearTimeout(awardTimer); awardTimer = 0;
-    // (2026-11-08, per Dan: after the share sheet closed, CONTINUE took a second or so to appear.) The whole badge screen used to be built again at the tap (new picture, confetti started again), which the phone then
+    // (2026-11-09 HQ, per Dan: after the share sheet closed, CONTINUE took a second or so to appear.) The whole badge screen used to be built again at the tap (new picture, confetti started again), which the phone then
     // painted when the sheet went away. Now CONTINUE is simply put in beside SHARE at the tap, before the sheet opens, and nothing else on the screen is touched: it is there the moment the sheet closes.
     var row = document.querySelector(".shareRow");
     if(document.querySelector('[onclick*="awardContinue"]')){ /* already there */ }
@@ -12700,7 +12906,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-08 IT10";
+var APP_BUILD = "2026-11-11 IT11";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -12713,6 +12919,7 @@ function screenOptions(){
       optionRow("sfx", t("sfxVolume"), typeof state.volSfx === "number" ? state.volSfx : 45) +
       optionRow("music", t("musicVolume"), typeof state.volMusic === "number" ? state.volMusic : 60) +
     '</div>' +
+    (clearMissionsDue() ? '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();clearMissionsAsk()">' + t("clearMissions") + '</button></div>' : '') +
     '<div class="shareRow optShare">' + shareBtnHtml("app", null, "options", t("shareAppBtn"), t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '</div>' +
     (instCanShow() ? '<div class="optInstall">' + instBtnHtml() + '</div>' : '') +
     '<div class="optPrivacy">' + t("privacyNote") + '</div>' +
@@ -12779,8 +12986,8 @@ function screenGoldenTicket(){
     '<button class="passClose gtClose" onpointerdown="pixPressSfx()" onclick="pixClickSfx();closeToHome(3)" aria-label="' + t("mainMenu") + '">X</button>' +
     '<div class="gtCenter">' +
       '<h2 class="passTitle">' + t("goldenTicketLabel") + '</h2>' +
-      '<div class="pixResMid"><div class="pixPaper">' +
-        '<img class="pixTicketBig" src="' + ticketPic() + '" alt="" decoding="sync">' +
+      '<div class="pixResMid"><div class="pixPaper' + (ticketCount() >= 2 ? ' gtTwo' : '') + '">' +
+        ticketsHtml() +
         '<div class="pixResTitle">' + t("ticketTitle") + '</div>' +
         '<p class="pixResBody">' + t("ticketBody") + '</p>' +
       '</div></div>' +
@@ -12921,12 +13128,12 @@ function pixHoldUntilLoaded(app){
   setTimeout(reveal, 1500);
 }
 // Every picture of the game (tiles/, all the .png and .jpg: 299 of them, about 5.6 MB), fetched a few at a time in the background after the first screen is up. New pictures put in tiles/ must be added to this list.
-var PRELOAD_LIST = "logo_small.png|qr_feyvida.png|scene_church.png|church_interior2.png|sky_menu.png|clouds_1.png|clouds_2.png|clouds_3.png|scene_world4.png|spark.png|fence_front4.png|dove3.png|pilgrim.png|pilgrim_back.png|sheep_near2.png|sheep_far2.png|heart_full.png|heart_empty.png|icons48p/ic_back.png|icons48p/ic_beTheLight.png|icons48p/ic_catchLight.png|icons48p/ic_chooseJoy.png|icons48p/ic_dovePeace.png|icons48p/ic_emojiStories.png|icons48p/ic_faithFlash.png|icons48p/ic_faithMatch.png|icons48p/ic_followLight.png|icons48p/ic_fruitsSpirit.png|icons48p/ic_goldenTicket.png|icons48p/ic_hiddenBlessings.png|icons48p/ic_hopeGarden.png|icons48p/ic_jacobLadder.png|icons48p/ic_jesusTimeline.png|icons48p/ic_kindnessSort.png|icons48p/ic_lightCandle.png|icons48p/ic_lock.png|icons48p/ic_music.png|icons48p/ic_mustardSeed.png|icons48p/ic_options.png|icons48p/ic_passport.png|icons48p/ic_pathOfLight.png|icons48p/ic_pilgrimRoad.png|icons48p/ic_prayBeads.png|icons48p/ic_sacredSudoku.png|icons48p/ic_sound.png|icons48p/ic_stainedGlass.png|icons48p/ic_tbd.png|icons48p/ic_wordGroups.png|icons48p/ic_wordTrail.png|icons48p/ic_wordUnscramble.png|icons48p/ic_emmaus.png|stars_tile.png|icons/lc_peace.png|ms/ms_1.png|fruits/fs_3.png|icons/lc_healing.png|icons/lc_family.png|emoji/e_ladder.png|fruits/fs_8.png|icons/ic_sound.png|icons/lc_friends.png|fruits/fs_7.png|icons/lc_courage.png|icons/lc_thanks.png|icons/ic_tbd.png|fruits/fs_6.png|icons/ic_wordUnscramble.png|icons/ic_back.png|fruits/fs_1.png|fruits/fs_2.png|icons/ic_goldenTicket.png|icons/ic_passport.png|ms/ms_2.png|fruits/fs_4.png|icons/ic_music.png|icons/ic_beTheLight.png|icons/ic_faithFlash.png|icons/ic_lock.png|icons/ic_kindnessSort.png|pr/church.png|emoji/e_tablets.png|icons/ic_lightCandle.png|hands.png|fruits/fs_5.png|flame.png|icons/ic_faithMatch.png|emoji/e_cross.png|icons/ic_emojiStories.png|icons/ic_hiddenBlessings.png|fruits/fs_9.png|icons/ic_catchLight.png|dove.png|ms/ms_5.png|fruits/fs_9c.png|icons/ic_jesusTimeline.png|icons/ic_options.png|sheep_far.png|icons/ic_followLight.png|card_back.png|ms/ms_3.png|fruits/fs_9b.png|icons/ic_pathOfLight.png|icons/ic_chooseJoy.png|icons/ic_emmaus.png|fruits/fs_9d.png|candle.png|cat.png|icons/ic_sacredSudoku.png|emoji/e_mountain.png|sheep_near.png|dog.png|icons/ic_stainedGlass.png|emoji/e_heart.png|fence_front2.png|ms/ms_4.png|icons48/ic_dovePeace.png|emoji/e_crown.png|icons48/ic_mustardSeed.png|emoji/e_cup.png|icons48/ic_fruitsSpirit.png|emoji/e_sunrise.png|ms/ms_6.png|fence_front.png|anamaria_placeholder.png|emoji/e_bread.png|sheep.png|icons48/ic_prayBeads.png|emoji/e_dove.png|icons48/ic_pilgrimRoad.png|icons48/ic_tbd.png|dove2.png|emoji/e_tower.png|icons48/ic_emmaus.png|icons48/ic_followLight.png|icons48/ic_wordGroups.png|emoji/e_jar.png|icons48/ic_jacobLadder.png|icons48/ic_wordUnscramble.png|icons48/ic_sound.png|emoji/e_rain.png|icons48/ic_faithFlash.png|icons48/ic_passport.png|icons48/ic_hopeGarden.png|icons48/ic_lock.png|emoji/e_sailboat.png|icons48/ic_wordTrail.png|emoji/e_house.png|icons48/ic_music.png|emoji/e_walk.png|icons48/ic_goldenTicket.png|hands3.png|icons48/ic_beTheLight.png|icons48/ic_kindnessSort.png|icons48/ic_back.png|icons48/ic_emojiStories.png|hands2.png|emoji/e_sheep.png|emoji/e_pig.png|emoji/e_pray.png|icons48/ic_lightCandle.png|emoji/e_fire.png|emoji/e_star.png|icons48/ic_faithMatch.png|emoji/e_rainbow.png|icons48/ic_hiddenBlessings.png|icons48/ic_sacredSudoku.png|icons48/ic_catchLight.png|emoji/e_ship.png|emoji/e_tree.png|emoji/e_people.png|icons48/ic_jesusTimeline.png|icons48/ic_chooseJoy.png|emoji/e_seedling.png|emoji/e_apple.png|icons48/ic_stainedGlass.png|emoji/e_moon.png|icons48/ic_options.png|icons48/ic_pathOfLight.png|emoji/e_elephant.png|emoji/e_moneybag.png|emoji/e_fish.png|emoji/e_sun.png|blessings.png|emoji/e_herb.png|emoji/e_boy.png|emoji/e_baby.png|emoji/e_oldman.png|emoji/e_whale.png|emoji/e_earth.png|emoji/e_wave.png|emoji/e_snake.png|emoji/e_feet.png|hg_qr.png|emoji/e_target.png|emoji/e_lion.png|emoji/e_angel.png|emoji/e_ogre.png|lawn.png|faith_tile8_08.png|passport_bg.png|faith_tile8_10.png|faith_tile8_00.png|faith_tile8_01.png|clouds_menu.png|faith_tile8_07.png|faith_tile8_14.png|faith_tile8_06.png|faith_tile8_03.png|faith_tile8_09.png|faith_tile8_04.png|faith_tile8_15.png|faith_tile8_05.png|faith_tile8_02.png|logo_8bit.png|faith_tile8_11.png|faith_tile8_13.png|faith_tile8_12.png|badges8/b8_mercy.png|badges8/b8_love.png|badges8/b8_salvation.png|badges8/b8_faith.png|badges8/b8_forgiveness.png|badges8/b8_grace.png|badges8/b8_holiness.png|scene_home.png|badges8/b8_light.png|badges8/b8_hope.png|hb_scene.png|badges8/b8_friendship.png|church_interior.png|scene_world.png|scene_world2.png|badges96/b96_perseverance.png|badges96/b96_growth.png|badges96/b96_discipleship.png|badges96/b96_scripture.png|badges96/b96_spirit.png|badges96/b96_wisdom.png|badges96/b96_truth.png|badges96/b96_beads.png|badges96/b96_mercy.png|badges96/b96_faith.png|badges96/b96_forgiveness.png|badges96/b96_salvation.png|badges96/b96_love.png|badges96/b96_friendship.png|badges96/b96_holiness.png|badges96/b96_grace.png|badges96/b96_light.png|badges96/b96_hope.png|faith_tile2_08.jpg|faith_tile2_07.jpg|faith_tile2_01.jpg|faith_tile2_10.jpg|faith_tile2_00.jpg|faith_tile2_09.jpg|faith_tile2_06.jpg|faith_tile2_14.jpg|faith_tile2_11.jpg|anamaria.png|faith_tile2_02.jpg|faith_tile2_05.jpg|faith_tile2_03.jpg|faith_tile2_04.jpg|faith_tile2_13.jpg|faith_tile2_15.jpg|faith_tile2_12.jpg|puzzle/pz_03.jpg|puzzle/pz_08.jpg|puzzle/pz_11.jpg|puzzle/pz_06.jpg|puzzle/pz_05.jpg|puzzle/pz_04.jpg|puzzle/pz_01.jpg|puzzle/pz_07.jpg|puzzle/pz_10.jpg|puzzle/pz_12.jpg|puzzle/pz_02.jpg|puzzle/pz_09.jpg|golden_ticket.png|golden_ticket_es.png|badge_discipleship.png|badge_perseverance.png|badge_growth.png|badge_wisdom.png|badge_truth.png|badge_scripture.png|badge_spirit.png|badge_beads.png|badge_faith.png|badge_love.png|badge_hope.png|badge_holiness.png|badge_friendship.png|badge_light.png|badge_forgiveness.png|badge_mercy.png|badge_salvation.png|badge_grace.png|hg_intro_scene.png".split("|");
-var PRELOAD_KB = [1,1,4,6,1,1,1,1,8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,6,7,8,11,11,11,12,12,12,12,12,14,14,15,15,15,15,15,15,15,16,16,16,17,17,17,19,21,22,22,22,23,23,24,26,30,30,32,45,48,56,57,58,59,61,62,63,70,81,82,100,86,117,117,118,121,123,126,127,128,205,212,214,214,216,218,220,220,220,221,282];          // the size of each picture above in KB (for the loading bar); regenerate when the list changes
+var PRELOAD_LIST = "logo_small.png|qr_feyvida.png|scene_church.png|church_interior2.png|sky_menu.png|clouds_1.png|clouds_2.png|clouds_3.png|scene_world4.png|spark.png|fence_front4.png|dove3.png|pilgrim.png|pilgrim_back.png|sheep_near2.png|sheep_far2.png|heart_full.png|heart_empty.png|icons48p/ic_back.png|icons48p/ic_beTheLight.png|icons48p/ic_catchLight.png|icons48p/ic_chooseJoy.png|icons48p/ic_dovePeace.png|icons48p/ic_emojiStories.png|icons48p/ic_faithFlash.png|icons48p/ic_faithMatch.png|icons48p/ic_followLight.png|icons48p/ic_fruitsSpirit.png|icons48p/ic_goldenTicket.png|icons48p/ic_hiddenBlessings.png|icons48p/ic_hopeGarden.png|icons48p/ic_jacobLadder.png|icons48p/ic_jesusTimeline.png|icons48p/ic_kindnessSort.png|icons48p/ic_lightCandle.png|icons48p/ic_lock.png|icons48p/ic_music.png|icons48p/ic_mustardSeed.png|icons48p/ic_options.png|icons48p/ic_passport.png|icons48p/ic_pathOfLight.png|icons48p/ic_pilgrimRoad.png|icons48p/ic_prayBeads.png|icons48p/ic_sacredSudoku.png|icons48p/ic_sound.png|icons48p/ic_stainedGlass.png|icons48p/ic_tbd.png|icons48p/ic_wordGroups.png|icons48p/ic_wordTrail.png|icons48p/ic_wordUnscramble.png|icons48p/ic_emmaus.png|icons48/ic_chooseJoy.png|../fyv/fyv_pnl_group.jpg|../fyv/fyv_logo.png|badges96/b96_perseverance.png|badges96/b96_growth.png|badges96/b96_discipleship.png|badges96/b96_scripture.png|badges96/b96_spirit.png|badges96/b96_wisdom.png|badges96/b96_truth.png|badges96/b96_beads.png|badges96/b96_mercy.png|badges96/b96_faith.png|badges96/b96_forgiveness.png|badges96/b96_salvation.png|badges96/b96_love.png|badges96/b96_friendship.png|badges96/b96_holiness.png|badges96/b96_grace.png|badges96/b96_light.png|badges96/b96_hope.png|stars_tile.png|icons/lc_peace.png|ms/ms_1.png|fruits/fs_3.png|icons/lc_healing.png|icons/lc_family.png|emoji/e_ladder.png|fruits/fs_8.png|icons/ic_sound.png|icons/lc_friends.png|fruits/fs_7.png|icons/lc_courage.png|icons/lc_thanks.png|icons/ic_tbd.png|fruits/fs_6.png|icons/ic_wordUnscramble.png|icons/ic_back.png|fruits/fs_1.png|fruits/fs_2.png|icons/ic_goldenTicket.png|icons/ic_passport.png|ms/ms_2.png|fruits/fs_4.png|icons/ic_music.png|icons/ic_beTheLight.png|icons/ic_faithFlash.png|icons/ic_lock.png|icons/ic_kindnessSort.png|pr/church.png|emoji/e_tablets.png|icons/ic_lightCandle.png|hands.png|fruits/fs_5.png|flame.png|icons/ic_faithMatch.png|emoji/e_cross.png|icons/ic_emojiStories.png|icons/ic_hiddenBlessings.png|fruits/fs_9.png|icons/ic_catchLight.png|dove.png|ms/ms_5.png|fruits/fs_9c.png|icons/ic_jesusTimeline.png|icons/ic_options.png|sheep_far.png|icons/ic_followLight.png|card_back.png|ms/ms_3.png|fruits/fs_9b.png|icons/ic_pathOfLight.png|icons/ic_chooseJoy.png|icons/ic_emmaus.png|fruits/fs_9d.png|candle.png|cat.png|icons/ic_sacredSudoku.png|emoji/e_mountain.png|sheep_near.png|dog.png|icons/ic_stainedGlass.png|emoji/e_heart.png|fence_front2.png|ms/ms_4.png|icons48/ic_dovePeace.png|emoji/e_crown.png|icons48/ic_mustardSeed.png|emoji/e_cup.png|icons48/ic_fruitsSpirit.png|emoji/e_sunrise.png|ms/ms_6.png|fence_front.png|anamaria_placeholder.png|emoji/e_bread.png|sheep.png|icons48/ic_prayBeads.png|emoji/e_dove.png|icons48/ic_pilgrimRoad.png|icons48/ic_tbd.png|dove2.png|emoji/e_tower.png|icons48/ic_emmaus.png|icons48/ic_followLight.png|icons48/ic_wordGroups.png|emoji/e_jar.png|icons48/ic_jacobLadder.png|icons48/ic_wordUnscramble.png|icons48/ic_sound.png|emoji/e_rain.png|icons48/ic_faithFlash.png|icons48/ic_passport.png|icons48/ic_hopeGarden.png|icons48/ic_lock.png|emoji/e_sailboat.png|icons48/ic_wordTrail.png|emoji/e_house.png|icons48/ic_music.png|emoji/e_walk.png|icons48/ic_goldenTicket.png|hands3.png|icons48/ic_beTheLight.png|icons48/ic_kindnessSort.png|icons48/ic_back.png|icons48/ic_emojiStories.png|hands2.png|emoji/e_sheep.png|emoji/e_pig.png|emoji/e_pray.png|icons48/ic_lightCandle.png|emoji/e_fire.png|emoji/e_star.png|icons48/ic_faithMatch.png|emoji/e_rainbow.png|icons48/ic_hiddenBlessings.png|icons48/ic_sacredSudoku.png|icons48/ic_catchLight.png|emoji/e_ship.png|emoji/e_tree.png|emoji/e_people.png|icons48/ic_jesusTimeline.png|emoji/e_seedling.png|emoji/e_apple.png|icons48/ic_stainedGlass.png|emoji/e_moon.png|icons48/ic_options.png|icons48/ic_pathOfLight.png|emoji/e_elephant.png|emoji/e_moneybag.png|emoji/e_fish.png|emoji/e_sun.png|blessings.png|emoji/e_herb.png|emoji/e_boy.png|emoji/e_baby.png|emoji/e_oldman.png|emoji/e_whale.png|emoji/e_earth.png|emoji/e_wave.png|emoji/e_snake.png|emoji/e_feet.png|hg_qr.png|emoji/e_target.png|emoji/e_lion.png|emoji/e_angel.png|emoji/e_ogre.png|lawn.png|faith_tile8_08.png|passport_bg.png|faith_tile8_10.png|faith_tile8_00.png|faith_tile8_01.png|clouds_menu.png|faith_tile8_07.png|faith_tile8_14.png|faith_tile8_06.png|faith_tile8_03.png|faith_tile8_09.png|faith_tile8_04.png|faith_tile8_15.png|faith_tile8_05.png|faith_tile8_02.png|logo_8bit.png|faith_tile8_11.png|faith_tile8_13.png|faith_tile8_12.png|badges8/b8_mercy.png|badges8/b8_love.png|badges8/b8_salvation.png|badges8/b8_faith.png|badges8/b8_forgiveness.png|badges8/b8_grace.png|badges8/b8_holiness.png|scene_home.png|badges8/b8_light.png|badges8/b8_hope.png|hb_scene.png|badges8/b8_friendship.png|church_interior.png|scene_world.png|scene_world2.png|faith_tile2_08.jpg|faith_tile2_07.jpg|faith_tile2_01.jpg|faith_tile2_10.jpg|faith_tile2_00.jpg|faith_tile2_09.jpg|faith_tile2_06.jpg|faith_tile2_14.jpg|faith_tile2_11.jpg|anamaria.png|faith_tile2_02.jpg|faith_tile2_05.jpg|faith_tile2_03.jpg|faith_tile2_04.jpg|faith_tile2_13.jpg|faith_tile2_15.jpg|faith_tile2_12.jpg|puzzle/pz_03.jpg|puzzle/pz_08.jpg|puzzle/pz_11.jpg|puzzle/pz_06.jpg|puzzle/pz_05.jpg|puzzle/pz_04.jpg|puzzle/pz_01.jpg|puzzle/pz_07.jpg|puzzle/pz_10.jpg|puzzle/pz_12.jpg|puzzle/pz_02.jpg|puzzle/pz_09.jpg|golden_ticket_1.png|golden_ticket_2.png|golden_ticket_1_es.png|golden_ticket_2_es.png|badge_discipleship.png|badge_perseverance.png|badge_growth.png|badge_wisdom.png|badge_truth.png|badge_scripture.png|badge_spirit.png|badge_beads.png|badge_faith.png|badge_love.png|badge_hope.png|badge_holiness.png|badge_friendship.png|badge_light.png|badge_forgiveness.png|badge_mercy.png|badge_salvation.png|badge_grace.png|hg_intro_scene.png|../tiles90/faith_tile90_00.png|../tiles90/faith_tile90_01.png|../tiles90/faith_tile90_02.png|../tiles90/faith_tile90_03.png|../tiles90/faith_tile90_04.png|../tiles90/faith_tile90_05.png|../tiles90/faith_tile90_06.png|../tiles90/faith_tile90_07.png|../tiles90/faith_tile90_08.png|../tiles90/faith_tile90_09.png|../tiles90/faith_tile90_10.png|../tiles90/faith_tile90_11.png|../tiles90/faith_tile90_12.png|../tiles90/faith_tile90_13.png|../tiles90/faith_tile90_14.png|../tiles90/faith_tile90_15.png".split("|");
+var PRELOAD_KB = [1,1,4,6,1,1,1,1,8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,123,29,11,11,11,12,12,12,12,12,14,14,15,15,15,15,15,15,15,16,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,6,7,8,16,16,17,17,17,19,21,22,22,22,23,23,24,26,30,30,32,45,48,56,57,58,59,61,62,63,70,81,82,102,105,108,110,117,117,118,121,123,126,127,128,205,212,214,214,216,218,220,220,220,221,282,11,10,13,12,14,13,12,12,8,11,9,15,16,15,11,13];          // the size of each picture above in KB (for the loading bar)
 var pixPreloadDone = false, pixBgAllDone = false;
 // The background queue (2026-11-07, per Dan; see the note at pixSfxFetchOne). In order: the pictures the first screens and the Missions window need (the front of PRELOAD_LIST), the tap sound, the music, the rest of the pictures
 // (smallest first, the big badges last), then the other sounds (smallest first). Four at a time. Nothing new starts while a screen is waiting for its own pictures (pixScreensWaiting).
-var pixWaitSet = {}, pixWaitId = 0, pixIdleHooks = [], pixBgQ = [], pixBgRunning = 0, pixBgStarted = false, pixBgPics = 0, pixBgTimer = 0;
+var pixWaitSet = {}, pixWaitId = 0, pixIdleHooks = [], pixBgQ = [], pixBgRunning = 0, pixBgStarted = false, pixBgPics = 0, pixBgTimer = 0, pixBgFirstLeft = 0;
 function pixWaitBegin(){ var id = ++pixWaitId; pixWaitSet[id] = performance.now(); return id; }
 function pixScreensWaiting(){      // (a wait that was never ended counts for 7.5 s at most)
   var now = performance.now(), any = false;
@@ -12938,9 +13145,9 @@ function pixWaitEnd(id){ if(pixWaitSet[id] !== undefined){ delete pixWaitSet[id]
 (function tick(){ window.pixSt(function(){ pixIdleKick(); tick(); }, 1500); })();          // (nothing can stay held back for long)
 function pixBgBuild(){
   var seen = {}, firstSet = {};
-  function pic(n){ if(seen[n]) return; seen[n] = 1; pixBgPics++; pixBgQ.push(function(done){ pixLoad(pixAbs("tiles/" + n), function(){ if(--pixBgPics === 0) pixBgPicturesDone(); done(); }, true); }); }
+  function pic(n, first){ if(seen[n]) return; seen[n] = 1; pixBgPics++; if(first) pixBgFirstLeft++; pixBgQ.push(function(done){ pixLoad(pixAbs("tiles/" + n), function(){ if(first) pixBgFirstLeft--; if(--pixBgPics === 0) pixBgPicturesDone(); done(); }, !first); }); }
   function snd(k){ if(seen["s:" + k] || !PIX_SFX[k]) return; seen["s:" + k] = 1; pixBgQ.push(function(done){ pixSfxFetchOne(k, done); }); }
-  PRELOAD_LIST.forEach(function(n, i){ if(i < PIX_FIRST_PICS){ firstSet[n] = 1; pic(n); } });
+  PRELOAD_LIST.forEach(function(n, i){ if(i < PIX_FIRST_PICS){ firstSet[n] = 1; pic(n, true); } });
   snd("tap");
   pixBgQ.push(function(done){ pixMusicFetch(done); });
   PIX_BG_ORDER.forEach(function(it){ if(it.charAt(0) === "p") pic(it.slice(2)); else snd(it.slice(2)); });
@@ -12954,7 +13161,7 @@ function pixBgPicturesDone(){
 }
 function pixBgNext(){
   if(!pixBgStarted) return;
-  while(pixBgRunning < 4 && pixBgQ.length && !pixScreensWaiting()){
+  while(pixBgRunning < (pixBgFirstLeft > 0 ? 8 : 4) && pixBgQ.length && !pixScreensWaiting()){
     pixBgRunning++;
     (function(fn){
       var fin = false;
@@ -12969,12 +13176,10 @@ function pixBgNext(){
   }
 }
 pixIdleHooks.push(pixBgNext);
-function pixBgGo(){ if(pixBgStarted || pixGateActive) return; pixBgStarted = true; dbgLog("assets: the background loading starts (" + Math.round(performance.now() / 1000) + " s after the page loaded, screen " + state.screen + ")"); pixBgBuild(); pixBgNext(); }
-// (2026-11-08, Italian copy IT6) a page that is too busy to answer is written to the event log (the first 15 times): the page did nothing for about so many milliseconds
-(function(){ var last = performance.now(), n = 0; setInterval(function(){ var now = performance.now(), gap = now - last - 250; last = now; if(gap > 350 && n < 15 && !document.hidden){ n++; dbgLog("slow: the page was busy and did not answer for about " + Math.round(gap) + " ms (screen " + state.screen + ")"); } }, 250); })();
-function pixBgSoon(){ if(pixBgStarted || pixBgTimer) return; pixBgTimer = window.pixSt(pixBgGo, 800); }          // the first screen is up: a moment later the background loading starts
+function pixBgGo(){ if(pixBgStarted || pixGateActive) return; pixBgStarted = true; pixBgBuild(); pixBgNext(); }
+function pixBgSoon(){ if(pixBgStarted || pixBgTimer) return; pixBgTimer = window.pixSt(pixBgGo, 0); }          // the first screen is up: a moment later the background loading starts
 // the first PIX_FIRST_PICS pictures of PRELOAD_LIST are the ones the first screens, the Main Menu and the Missions window use
-var PIX_FIRST_PICS = 51;
+var PIX_FIRST_PICS = 72;
 // With the app installed (a service worker is in charge), every sound is fetched once in the background too, so the game plays completely offline, not only the sounds that have been heard (2026-11-02, per Dan).
 // The pictures too: on the very first visit the worker takes charge only after some of them were fetched, so they are asked for once more, through it. Done once per build on a phone.
 var pixWarmStarted = false;
@@ -12985,6 +13190,7 @@ function pixWarmSounds(){
   var urls = [PIX_MUSIC_URL], i = 0, running = 0;
   Object.keys(PIX_SFX).forEach(function(k){ var u = PIX_SFX[k] && PIX_SFX[k].url; if(u && urls.indexOf(u) === -1) urls.push(u); });
   PRELOAD_LIST.forEach(function(n){ urls.push("tiles/" + n); });
+  MATCH_SYMBOLS.forEach(function(s){ if(urls.indexOf(s) === -1) urls.push(s); });          // (the Faith Match pictures are in tiles90/)
   urls.push("tiles/Jersey10.ttf", "tiles/PixelifySans.ttf", "emmaus_layout.js", location.pathname);      // (the page itself too: the first visit is not one the worker saw)
   var finished = false;
   function next(){
@@ -13006,7 +13212,7 @@ var PIX_WAIT_MAX = 6000;
 // A switch to find out whether the picture waiting causes the flashes (2026-11-04, per Dan): a link with ?noassets turns the waiting, the hiding of late pictures and the decoding of the preload OFF on that phone
 // (the screens are put up at once, as before build DQ); ?noassets=0 turns it back on. The Options event log says which mode the page is in.
 var PIX_OFF = false;
-(function(){ try{ var m = /[?&]noassets(?:=([^&]*))?/.exec(location.search || ""); if(m) phSet("fevidaItNoAssets", m[1] === "0" ? null : "1"); PIX_OFF = phGet("fevidaItNoAssets") === "1"; }catch(e){} })();
+(function(){ try{ var m = /[?&]noassets(?:=([^&]*))?/.exec(location.search || ""); phSet("fevidaItNoAssets", null); PIX_OFF = !!m && m[1] !== "0"; }catch(e){} })();
 dbgLog("assets: waiting for pictures is " + (PIX_OFF ? "OFF (?noassets)" : "on"));
 var pixGuardLogN = 0;
 var pixReady = {}, pixLoading = {}, pixImgs = {}, pixKeep = [], pixAbsCache = {}, pixAnchor = document.createElement("a");
@@ -13056,9 +13262,10 @@ function pixBuildRules(){
   try { for(var s = 0; s < document.styleSheets.length; s++) walk(document.styleSheets[s].cssRules); } catch(e){}
 }
 var PIX_EXTRA = {                                    // pictures that a screen uses without having them in its markup
+  mainMenu: PRELOAD_LIST.filter(function(n){ return n.indexOf("icons48p/") === 0; }).map(function(n){ return "tiles/" + n; }),          // (2026-11-10, per Dan: the icons of the Missions window are in before the Main Menu is, so the window never opens with empty tiles)
   emmaus: ["tiles/sheep_near.png", "tiles/dog.png"],                                   // drawn on the canvas
   fruitsSpirit: ["tiles/fruits/fs_1.png", "tiles/fruits/fs_2.png", "tiles/fruits/fs_3.png", "tiles/fruits/fs_4.png", "tiles/fruits/fs_5.png", "tiles/fruits/fs_6.png", "tiles/fruits/fs_7.png", "tiles/fruits/fs_8.png", "tiles/fruits/fs_9.png", "tiles/fruits/fs_9b.png", "tiles/fruits/fs_9c.png", "tiles/fruits/fs_9d.png"],      // the fruits and the flame the Spirit fruit swaps through
-  churchWalk: ["tiles/pilgrim_back.png", "tiles/golden_ticket.png", "tiles/golden_ticket_es.png", "tiles/church_interior2.png"]
+  churchWalk: ["tiles/pilgrim_back.png", "tiles/golden_ticket_1.png", "tiles/golden_ticket_2.png", "tiles/golden_ticket_1_es.png", "tiles/golden_ticket_2_es.png", "tiles/church_interior2.png"]
 };
 // what the markup of the next screen needs and has not got yet: {urls: [...], fonts: bool}, or null when everything is in
 function pixMissing(html, isNew){
@@ -13116,7 +13323,38 @@ function pixGuardStart(){
   pixGuard.observe(document.getElementById("app"), {childList: true, subtree: true});
 }
 var renderToken = 0;
+// The first screen waits until the screen height is steady (Master Change List 57; see first_paint_fix.py).
+var pixViewSettled = false, pixSettleStarted = false, PIX_STEADY_MS = 80, PIX_SETTLE_MAX = 600;
+function pixSettleWait(){
+  if(pixSettleStarted) return;
+  pixSettleStarted = true;
+  var t0 = performance.now(), pr = null, since = t0, lastIh = -1, lastDv = -1, done = false;
+  try {
+    pr = document.createElement("div");
+    pr.style.cssText = "position:fixed;left:0;top:0;width:0;height:100dvh;visibility:hidden;pointer-events:none;";
+    (document.body || document.documentElement).appendChild(pr);
+  } catch(e){ pr = null; }
+  function finish(why){
+    if(done) return; done = true;
+    try { if(pr && pr.parentNode) pr.parentNode.removeChild(pr); } catch(e){}
+    pixViewSettled = true;
+    try { dbgLog("first screen: " + why + " after " + Math.round(performance.now() - t0) + " ms (innerHeight " + window.innerHeight + ")"); } catch(e){}
+    render();
+  }
+  function look(){
+    if(done) return;
+    var now = performance.now(), ih = window.innerHeight, dv = pr ? Math.round(pr.getBoundingClientRect().height * 10) / 10 : ih;
+    if(ih !== lastIh || dv !== lastDv || Math.abs(dv - ih) >= 1){ since = now; }          // something moved, or 100dvh is not the window height: start counting again
+    lastIh = ih; lastDv = dv;
+    if(now - since >= PIX_STEADY_MS) finish("screen height steady at " + ih + " px");
+    else if(now - t0 >= PIX_SETTLE_MAX) finish("no steady screen height after " + PIX_SETTLE_MAX + " ms (innerHeight " + ih + ", 100dvh " + dv + ")");
+    else window.requestAnimationFrame(look);
+  }
+  window.requestAnimationFrame(look);
+  window.setTimeout(function(){ finish("timer (no frames came)"); }, PIX_SETTLE_MAX + 150);
+}
 function render(){
+  if(!pixViewSettled){ pixSettleWait(); return; }
   var html;
   switch(state.screen){
     case "language": html = screenLanguage(); break;
@@ -13205,6 +13443,10 @@ function renderApply(html){
   var badgeNow = !!app.querySelector(".pixResBadge") || state.screen === "award";
   if(badgeNow && !pxBadgeShown) pixConfettiParty();
   pxBadgeShown = badgeNow;
+  var soCloseNow = !!app.querySelector("[data-soclose]");          // (2026-11-10, per Dan: sound_effect_8 when a SO CLOSE! window is displayed)
+  if(soCloseNow && !pxSoCloseShown && !(performance.now() - (window.pixFmLastAt || -99999) < 3000)) pixSfxPlay("fmLast", true);
+  pxSoCloseShown = soCloseNow;
+  if(state.screen === "award" && pxConfettiCv){ [].forEach.call(app.querySelectorAll(".shareRow"), function(r){ r.classList.add("shareWait"); }); }          // (2026-11-10, per Dan: no SHARE button while the confetti flies)
   if(isNewScreen){
     var el = app.querySelector(".screen");
     // No fade at all (2026-11-04, per Dan: "all screens should instantly appear and not fade in"). Before, only a sky screen after a sky screen came up at once (2026-10-22: the fade starts from see-through, which
@@ -13322,21 +13564,20 @@ function renderApply(html){
   }
 }
 
-
 // ---- the loading screen (2026-11-08, Italian copy IT8, per Dan) ----
 // On the first visit of a build every picture (5 MB) is fetched and decoded behind the loading screen before the first tap is possible, so no screen waits for its pictures, no Faith Match tile shows white, and the tap sound
 // is in. The bar fills with the bytes that arrive and a pilgrim walks along it. After PIX_GATE_MAX it opens anyway (the rest goes on in the background, as before). A phone that has already saved everything of this build (the
-// "offline: everything is saved" step sets fevidaItWarm) skips it. The sounds and the music load in the background once it is done (pixBgGo).
-var pixGateActive = false, pixGateT0 = 0, PIX_GATE_MAX = 12000;
+// "offline: everything is saved" step sets fevidaWarm) skips it. The sounds and the music load in the background once it is done (pixBgGo).
+var pixGateActive = false, pixGateT0 = 0, PIX_GATE_MAX = 12000, PIX_GATE_MIN = 2000;
 function pixGateNeeded(){
-  if(PIX_OFF || !window.fetch) return false;
-  try { if(localStorage.getItem("fevidaItWarm") === APP_BUILD) return false; } catch(e){}
+  if(PIX_OFF || !window.fetch){ dbgLog("assets: no loading screen: " + (PIX_OFF ? "the ?noassets switch is on for this page" : "this browser has no fetch")); return false; }
+  try { if(localStorage.getItem("fevidaItWarm") === APP_BUILD){ dbgLog("assets: no loading screen: this phone has already saved every picture and sound of build " + APP_BUILD); return false; } } catch(e){}
   return true;
 }
 function pixGateStart(){
   if(!pixGateNeeded()) return;
   var boot = document.getElementById("boot"); if(!boot) return;
-  pixGateActive = true; pixGateT0 = performance.now();
+  pixGateActive = true; pixGateT0 = performance.now(); boot.classList.add("gate");
   // What it waits for: every picture the screens and games use, but not the 18 big badge pictures (3 MB, only the Passport shows them) nor the old faith_tile2 pictures (no screen uses them): those load in the background afterwards.
   var idxs = [], total = 0, got = 0, qi = 0, running = 0, finished = false, i, n;
   for(i = 0; i < PRELOAD_LIST.length; i++){ var nm = PRELOAD_LIST[i]; if(nm.indexOf("badge_") === 0 || nm.indexOf("faith_tile2_") === 0) continue; idxs.push(i); total += (PRELOAD_KB[i] || 1); }
@@ -13348,7 +13589,7 @@ function pixGateStart(){
     boot.style.setProperty("--p", 100);
     pixGateActive = false;
     dbgLog("assets: the loading screen was up " + Math.round(performance.now() - pixGateT0) + " ms (" + why + ", " + Math.round(100 * got / total) + "% of the bytes)");
-    window.pixSt(function(){ var b = document.getElementById("boot"); if(b && b.parentNode && lastRenderedScreen) b.parentNode.removeChild(b); pixBgGo(); }, 150);
+    window.pixSt(function(){ var b = document.getElementById("boot"); if(b && b.parentNode && lastRenderedScreen) b.parentNode.removeChild(b); pixBgGo(); }, Math.max(150, PIX_GATE_MIN - (performance.now() - pixGateT0)));          // (never less than PIX_GATE_MIN on the screen: no flash)
   }
   function next(){
     while(running < 8 && qi < n){
@@ -13363,6 +13604,184 @@ function pixGateStart(){
   window.pixSt(function(){ finish("the " + (PIX_GATE_MAX / 1000) + " s limit"); }, PIX_GATE_MAX);
 }
 
+
+// ---- the Fe y Vida screen (2026-11-09, per Dan; Master Change List 1): the logo on the Main Menu opens a page, not 8-bit, that says what Fe y Vida is. The words are our own summary of feyvida.org. ----
+var FV_TEXT = {
+  en: {
+    back: "← BACK", title: "Fe y Vida", sub: "Instituto Fe y Vida: a Catholic ministry for Latino youth, families and pastoral leaders",
+    whoH: "WHO WE ARE",
+    who1: "Fe y Vida is a Lasallian Catholic ministry. It helps Latino teens, young adults, families and pastoral leaders grow in their faith and step forward as leaders in the Church and in society.",
+    who2: "Founded in 1994, it has now walked with the Church for more than 30 years, forming generations of leaders.",
+    stats: [["14,000+", "leaders trained"], ["300", "parishes served"], ["50", "dioceses served"], ["12", "programs"]],
+    missH: "OUR MISSION", miss: "To prepare Hispanic pastoral ministers, young leaders and parents for personal growth, faith formation and leadership in the Church and in society.",
+    visH: "OUR VISION", vis: "A Church that nurtures the faith and hope of Latino young people and their families, and stands beside parents as they raise their children in the faith.",
+    doH: "WHAT WE DO",
+    progs: [["National Catholic Leadership Program (PNL)", "a summer week of formation, prayer, community and leadership."],
+            ["Thriving Catholic Parishes (TCP)", "helping parishes become places where people belong, take part and live their faith together."],
+            ["Amor y Vida", "a journey of faith for Latino teens and their parents or caregivers."],
+            ["Pastoral courses", "youth ministry, pastoral leadership and Bible courses for the people who accompany young people."],
+            ["Online Campus", "courses, materials and guidance, with a certificate at the end."]],
+    whereH: "WHERE WE ARE", where: "Fe y Vida is based at Fitzpatrick House on the campus of Lewis University in Romeoville, Illinois. It is a ministry of the Christian Brothers of La Salle, Midwest District.",
+    walk: "Walk with us!", visit: "VISIT FEYVIDA.ORG", fb: "FIND US ON FACEBOOK", cap: "Participants of the National Catholic Leadership Program (PNL), 2025", done: "BACK TO THE GAME"
+  },
+  es: {
+    back: "← INDIETRO", title: "Fe y Vida", sub: "Instituto Fe y Vida: un ministero cattolico per i giovani latini, le famiglie e i leader pastorali",
+    whoH: "CHI SIAMO",
+    who1: "Fe y Vida è un ministero cattolico lasalliano. Aiuta adolescenti, giovani adulti, famiglie e leader pastorali latini a crescere nella fede e a farsi avanti come leader nella Chiesa e nella società.",
+    who2: "Fondato nel 1994, cammina ormai da oltre 30 anni con la Chiesa, formando generazioni di leader.",
+    stats: [["14.000+", "leader formati"], ["300", "parrocchie servite"], ["50", "diocesi servite"], ["12", "programmi"]],
+    missH: "LA NOSTRA MISSIONE", miss: "Preparare ministri pastorali ispanici, giovani leader e genitori alla crescita personale, alla formazione nella fede e alla leadership nella Chiesa e nella società.",
+    visH: "LA NOSTRA VISIONE", vis: "Una Chiesa che nutre la fede e la speranza dei giovani latini e delle loro famiglie, e che sta accanto ai genitori mentre educano i figli nella fede.",
+    doH: "COSA FACCIAMO",
+    progs: [["Programma Nazionale di Leadership Cattolica (PNL)", "una settimana estiva di formazione, preghiera, comunità e leadership."],
+            ["Thriving Catholic Parishes (TCP)", "aiuta le parrocchie a diventare luoghi dove le persone si sentono accolte, partecipano e vivono insieme la propria fede."],
+            ["Amor y Vida", "un cammino di fede per adolescenti latini e per i loro genitori o tutori."],
+            ["Corsi di pastorale", "pastorale giovanile, leadership pastorale e corsi biblici per chi accompagna i giovani."],
+            ["Campus online", "corsi, materiali e orientamento, con certificato finale."]],
+    whereH: "DOVE SIAMO", where: "Fe y Vida ha sede a Fitzpatrick House, nel campus della Lewis University, a Romeoville, nell’Illinois. È un ministero dei Fratelli delle Scuole Cristiane (De La Salle), Distretto del Midwest.",
+    walk: "Cammina con noi!", visit: "VISITA FEYVIDA.ORG", fb: "SEGUICI SU FACEBOOK", cap: "Partecipanti al Programma Nazionale di Leadership Cattolica (PNL), 2025", done: "TORNA AL GIOCO"
+  }
+};
+function fvOpen(){
+  if(document.getElementById("fvOverlay")) return;
+  if(document.querySelector(".pixMenu.pilgrimBusy")) return;          // (the pilgrim is talking or walking: the logo cannot be used, 2026-11-09, per Dan)
+  if(typeof toastHide === "function") toastHide();          // (a message such as "Earn 500 points..." must not stay over this page)
+  if(typeof toastHide === "function") toastHide();          // (a message such as "Earn 500 points..." must not stay over this page)
+  var x = FV_TEXT[state && state.lang === "es" ? "es" : "en"], i, stats = "", progs = "";
+  for(i = 0; i < x.stats.length; i++) stats += '<div class="fvStat fvS' + (i + 1) + '"><b>' + x.stats[i][0] + '</b><span>' + x.stats[i][1] + '</span></div>';
+  for(i = 0; i < x.progs.length; i++) progs += '<li><b>' + x.progs[i][0] + '</b>: ' + x.progs[i][1] + '</li>';
+  var el = document.createElement("div");
+  el.id = "fvOverlay"; el.className = "fvOverlay";
+  el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Fe y Vida");
+  el.innerHTML = '<div class="fvTop"><button class="fvBack" onclick="fvClose()">' + x.back + '</button></div>' +
+    '<div class="fvHero"><img class="fvLogo" src="fyv/fyv_logo.png" alt="Fe y Vida"><h1 class="fvTitle">' + x.title + '</h1><p class="fvSub">' + x.sub + '</p></div>' +
+    '<div class="fvPhoto"><img src="fyv/fyv_pnl_group.jpg" alt="' + x.cap + '"><p class="fvCap">' + x.cap + '</p></div>' +
+    '<div class="fvWrap">' +
+      '<div class="fvCard fvGreen"><h2>' + x.whoH + '</h2><p>' + x.who1 + '</p><p>' + x.who2 + '</p></div>' +
+      '<div class="fvStats">' + stats + '</div>' +
+      '<div class="fvCard fvPurple"><h2>' + x.missH + '</h2><p>' + x.miss + '</p></div>' +
+      '<div class="fvCard fvBlue"><h2>' + x.visH + '</h2><p>' + x.vis + '</p></div>' +
+      '<div class="fvCard fvGreen"><h2>' + x.doH + '</h2><ul class="fvList">' + progs + '</ul></div>' +
+      '<div class="fvCard fvGold"><h2>' + x.whereH + '</h2><p>' + x.where + '</p></div>' +
+      '<div class="fvWalk">' + x.walk + '</div>' +
+      '<a class="fvVisit" href="https://feyvida.org" target="_blank" rel="noopener">' + x.visit + '</a>' +
+      '<a class="fvFb" href="https://www.facebook.com/feyvida.ministerio.3" target="_blank" rel="noopener"><i>f</i>' + x.fb + '</a>' +
+      '<div class="fvAddr">feyvida.org<br>facebook.com/feyvida.ministerio.3</div>' +
+      '<button class="fvDone" onclick="fvClose()">' + x.done + '</button>' +
+    '</div>';
+  document.body.appendChild(el);
+  try { el.scrollTop = 0; } catch(e){}
+  try { track("feyvida_screen_opened", {lang: state.lang}); } catch(e2){}
+}
+function fvClose(){ var el = document.getElementById("fvOverlay"); if(el && el.parentNode) el.parentNode.removeChild(el); }
+document.addEventListener("keydown", function(e){ if(e.key === "Escape") fvClose(); });
+
+
+// ---- two Golden Tickets (2026-11-09, per Dan; Master Change List 12) ----
+// tickets won: 0, 1 or 2. A game saved by an earlier build (ticketUnlocked, no tickets) has won ticket 1.
+function ticketCount(){
+  if(typeof state.tickets === "number") return state.tickets;
+  return state.ticketUnlocked === true ? 1 : (goldenTicketUnlocked() ? 1 : 0);
+}
+// the pilgrim, once in the church, plays the church scene (and a ticket appears) when no ticket is waiting to be handed over: at the start, and again after the first CLEAR MISSIONS
+function ticketWalkDue(){ var n = ticketCount(); return n === 0 || (n === 1 && state.tk1Check === true); }
+function cwTicketNum(){ return ticketCount() === 0 ? 1 : 2; }
+function ticketPicN(n){ return "tiles/golden_ticket_" + (n === 2 ? "2" : "1") + (state.lang === "es" ? "_es" : "") + ".png"; }
+// the CLEAR MISSIONS button of the Options screen is there while a won ticket's prize has not been handed over
+function clearMissionsDue(){ var n = ticketCount(); return (n === 1 && state.tk1Check !== true) || (n >= 2 && state.tk2Check !== true); }
+function clearMissionsAsk(){
+  if(document.getElementById("clearAskOverlay")) return;
+  var el = document.createElement("div");
+  el.id = "clearAskOverlay"; el.className = "quitOverlay";
+  el.innerHTML = '<div class="pixPaper pixRoundDone"><div class="pixResTitle">' + t("sureTitle") + '</div><p class="pixResBody">' + t(ticketCount() >= 2 ? "sureBody2" : "sureBody1") + '</p>' +
+    '<div class="quitBtns">' + pixBtnHtml(t("sureYes"), "clearMissionsGo()").replace("pixBtnSm", t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + pixBtnHtml(t("sureNo"), "clearMissionsNo()", true).replace("pixBtnSm", t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '</div></div>';
+  document.body.appendChild(el);
+}
+function clearMissionsNo(){ var el = document.getElementById("clearAskOverlay"); if(el && el.parentNode) el.parentNode.removeChild(el); }
+function clearMissionsGo(){
+  clearMissionsNo();
+  var n = ticketCount();
+  if(n === 1 && state.tk1Check !== true){
+    state.tk1Check = true;
+    // the check marks of every mission go (the badges in the Passport and the hearts stay), the points and the pilgrim start over; the Golden Ticket icon stays open and ticket 1 stays on its screen
+    MISSIONS.forEach(function(m){ state.missions[m.id].done = false; });
+    state.points = 0; state.pilgrimSteps = 0; state.pilgrimIn = false; state.pilgrimP = 0; state.pilgrimOwed = false; state.folderOpen = false;
+    state.awardMissionId = null; state.contFor = null;
+    pilgrimPos = 0; pilgrimFaceLeft = false; pilgrimAward = null; pilgrimGreetPending = false;
+    track("missions_cleared", {ticket: 1});
+  } else if(n >= 2 && state.tk2Check !== true){
+    state.tk2Check = true;
+    track("missions_cleared", {ticket: 2});
+  }
+  saveState();
+  closeToHome(4);          // (2026-11-09, per Dan: always close the Options screen and go back to the Main Menu, the way the red X does)
+}
+function ticketsHtml(){
+  var n = Math.max(1, ticketCount()), out = "";
+  for(var i = 1; i <= n; i++){
+    var checked = i === 1 ? state.tk1Check === true : state.tk2Check === true;
+    out += '<div class="gtTk"><img class="pixTicketBig" src="' + ticketPicN(i) + '" alt="' + t("goldenTicketLabel") + ' ' + i + '" decoding="sync">' + (checked ? '<span class="gtCheck">&#10003;</span>' : '') + '</div>';
+  }
+  return out;
+}
+
+
+// ---- the screen after a turn of the phone (2026-11-09, per Dan's iPhone test: white band at the bottom, the top pushed up, buttons needing several taps; Master Change List 13) ----
+function vpMetrics(){
+  var vv = window.visualViewport, app = document.getElementById("app"), r = app ? app.getBoundingClientRect() : null, de = document.documentElement;
+  return {ih: window.innerHeight, ch: de.clientHeight, vh: vv ? Math.round(vv.height) : null, vt: vv ? Math.round(vv.offsetTop) : null, vs: vv ? Math.round(vv.scale * 100) / 100 : null,
+          sy: Math.round(window.pageYOffset || 0), at: r ? Math.round(r.top) : null, ab: r ? Math.round(r.bottom) : null};
+}
+function vpText(m){ return "ih " + m.ih + " ch " + m.ch + " vv " + m.vh + "+" + m.vt + " x" + m.vs + " scrollY " + m.sy + " app " + m.at + ".." + m.ab; }
+function vpResync(why, always){
+  vpTurnCheck();          // (the size a phone reports at the moment of the turn is often the old one: look again at every step)
+  var m0 = vpMetrics(), bad = m0.sy !== 0 || (m0.vt !== null && Math.abs(m0.vt) > 1) || (m0.at !== null && Math.abs(m0.at) > 1) || (m0.ab !== null && Math.abs(m0.ab - m0.ih) > 2);
+  try { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e){}
+  var de = document.documentElement, want = Math.max(m0.ih, m0.vh !== null ? m0.vh + Math.max(0, m0.vt || 0) : 0);
+  if(bad && want > 0){ de.style.setProperty("--appH", want + "px"); de.classList.add("vpFix"); } else { de.style.removeProperty("--appH"); de.classList.remove("vpFix"); }
+  if(bad || always){ var m1 = vpMetrics(); try { dbgLog("view " + why + ": " + vpText(m0) + (bad ? " -> fixed: " + vpText(m1) : " (fine)")); } catch(e){} }
+}
+var vpTimer = 0;
+function vpResyncSoon(why){
+  window.clearTimeout(vpTimer);
+  var n = 0, steps = [0, 150, 450, 1000, 2000];
+  (function go(){ vpResync(why, n === 3); n++; if(n < steps.length) vpTimer = window.setTimeout(go, steps[n] - steps[n - 1]); })();
+}
+var vpWasLandscape = window.innerWidth > window.innerHeight, vpHoldTimer = 0;
+function vpHoldOn(){
+  var el = document.getElementById("vpCover");
+  if(!el){ el = document.createElement("div"); el.id = "vpCover"; document.body.appendChild(el); }
+  document.documentElement.classList.add("vpHold");
+  window.clearTimeout(vpHoldTimer);
+  vpHoldTimer = window.setTimeout(function(){ document.documentElement.classList.remove("vpHold"); }, 1000);
+}
+// (2026-11-09, per Dan: "sometimes the rotation is very clean and sometimes the entire portrait background image appears for an instant and then goes away and reappears": the cover came on when the turn
+// back was reported, which the phone does late: sometimes after the first frame.) The cover is now ON the whole time the Rotate message is showing (the message is on top of it, so nothing changes to look at), so that when the phone is
+// upright again the cover is already there; it stays 1 s after the message goes, then fades.
+var vpStick = false;
+function vpSync(){
+  var showing = false;
+  try { showing = rotateMsgShowing(); } catch(e){}
+  var el = document.getElementById("vpCover");
+  if(showing){
+    if(!el){ el = document.createElement("div"); el.id = "vpCover"; document.body.appendChild(el); }
+    vpStick = true; window.clearTimeout(vpHoldTimer);
+    document.documentElement.classList.add("vpHold");
+  } else if(vpStick){ vpStick = false; vpHoldOn(); }
+}
+function vpTurnCheck(){
+  var land = window.innerWidth > window.innerHeight;
+  if(land !== vpWasLandscape){          // the phone was turned, either way: cover the page while the layout settles (2026-11-09, per Dan: "the screen still flashes part of the current screen when turning")
+    vpHoldOn();
+    try { dbgLog("view: the phone is " + (land ? "on its side" : "upright") + ", the page is covered for a moment while it settles"); } catch(e){}
+  }
+  vpWasLandscape = land;
+  vpSync();
+}
+window.addEventListener("orientationchange", function(){ vpHoldOn(); vpTurnCheck(); vpResyncSoon("turned"); });
+window.addEventListener("resize", function(){ vpTurnCheck(); vpResyncSoon("resized"); });
+if(window.visualViewport){ window.visualViewport.addEventListener("resize", function(){ vpResyncSoon("viewport"); }); window.visualViewport.addEventListener("scroll", function(){ if(Math.abs(window.visualViewport.offsetTop) > 1 || (window.pageYOffset || 0) !== 0) vpResyncSoon("scrolled"); }); }
+
 window.addEventListener("pagehide", saveState);
 window.addEventListener("visibilitychange", saveState);
 
@@ -13370,6 +13789,7 @@ dbgLog("page loaded " + APP_BUILD + " " + dbgView() + " nav:" + (function(){ try
 pixFontsLoad();
 pixGuardStart();
 phInit();
+try { pixSfxFetchOne("tap"); } catch(e){}          // (the button sound first of all, whether or not the loading screen runs)
 pixGateStart();
 render();
 // The service worker (sw.js) saves the game on the phone so it opens from the home screen and plays without a connection. It is registered with the build in its address, so every new build is a new worker with a fresh cache.
