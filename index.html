@@ -2278,6 +2278,16 @@ var state = loadState();
 // A small event log (2026-10-30, per Dan's report of the PLEASE ROTATE YOUR PHONE screen coming up in the middle of the Road to Emmaus): every change of screen (and what called it), every resize / turn of the phone,
 // the page being hidden, shown or loaded again. It is kept in this tab (sessionStorage, the last 90 lines); Options > tap the "Build" line shows it.
 var DBG_KEY = "fevidaItLog", dbgLast = "";
+// (2026-11-11, per Dan's Sudoku badge delay) The page-busy watch: a timer every 100 ms; when it comes late by more than 300 ms the log says by how much, on which screen, and the last line before it. First 25 only.
+(function(){
+  var last = performance.now(), n = 0, hiddenAt = performance.now();
+  setInterval(function(){
+    var now = performance.now(), gap = now - last - 100; last = now;
+    if(document.hidden){ hiddenAt = now; return; }
+    if(now - hiddenAt < 2500) return;                    // (a page that has just come back to the front is not "busy")
+    if(gap > 300 && n < 25){ n++; try{ dbgLog("slow: the page did not answer for about " + Math.round(gap) + " ms (screen " + state.screen + "; the line before: " + String(dbgLast || "").slice(0, 70) + ")"); }catch(e){} }
+  }, 100);
+})();
 function dbgLog(msg){
   try{
     if(msg === dbgLast) return; dbgLast = msg;
@@ -3151,6 +3161,7 @@ var GUIDE_MISSIONS = ["faithFlash","faithMatch","stainedGlass","followLight","wo
   "jacobLadder","emojiStories","jesusTimeline","sacredSudoku","wordTrail","wordGroups","mustardSeed","prayBeads","pilgrimRoad","dovePeace","emmaus"];
 function openMission(id){
   toastHide();
+  if(id === "sacredSudoku") pixSudokuWarm();          // (decoded while the instruction screen is read, so the board has nothing to wait for; 2026-11-11)
   track("mission_icon_tapped", {mission_id: id, from: state.folderOpen ? "folder" : "menu", completed: !!(state.missions[id] && state.missions[id].done)});
   // Every mission can always be played again (2026-11-05, per Dan; the temporary "tapping a finished mission clears it" is gone). A game that is already done gives no second badge, points or step for the pilgrim:
   // round 1 of a replay goes straight on to round 2 (see roundOneGrant), and finishing all the rounds goes back to the Main Menu (see grantMission).
@@ -3992,21 +4003,22 @@ function awardAutoReturn(){
   // The 2.5 seconds count from the moment the badge screen is really on the glass (2026-11-05, per Dan: Faith Flash's is the right length and some other games' badge screens were gone sooner).
   // The old count began when the screen was built; a game that is slow to paint it (the ones with a busy canvas or a lot to take down) lost that time off the front. Now the count begins after the
   // badge picture is decoded and two frames have been painted. If no frame comes (a hidden page), it begins after 1 s anyway. The event log (Options) says how long the paint took.
-  var armedAt = performance.now(), began = false, mission = awardTimerFor;
+  var armedAt = performance.now(), began = false, mission = awardTimerFor, awDiag = {};
   function begin(){
     if(began) return; began = true;
     if(mission !== awardTimerFor) return;           // a different badge has taken over since: it has its own count
     clearTimeout(awardTimer); awardTimer = 0;
     if(state.screen !== "award" || state.awardMissionId !== mission) return;
-    try { dbgLog("badge screen " + mission + ": painted " + Math.round(performance.now() - armedAt) + " ms after it was built, shown for " + AWARD_SHOW_MS + " ms"); } catch(e0){}
+    try { dbgLog("badge screen " + mission + ": painted " + Math.round(performance.now() - armedAt) + " ms after it was built, shown for " + AWARD_SHOW_MS + " ms" + " [picture " + (awDiag.loaded === undefined ? "not found" : awDiag.loaded ? "held ready by the loading list" : "NOT held by the loading list") + ", decode " + (awDiag.dec === undefined ? "not finished" : awDiag.dec + " ms") + ", frame 1 " + (awDiag.f1 === undefined ? "not yet" : awDiag.f1 + " ms") + ", frame 2 " + (awDiag.f2 === undefined ? "not yet" : awDiag.f2 + " ms") + "]"); } catch(e0){}
     awardTimer = setTimeout(leave, AWARD_SHOW_MS);
   }
   awardLeaveFn = leave;
   awardTimer = setTimeout(begin, 1000);          // (also what stops a redraw of the same screen from starting a second count)
   try {
     var bimg = document.querySelector(".pixResBadge");
+    if(bimg){ try{ awDiag.loaded = !!pixImgs[pixAbs(bimg.getAttribute("src"))]; }catch(e2){ awDiag.loaded = false; } }          // (held by the loading list = fetched and decoded ahead of time)
     var decoded = (bimg && bimg.decode) ? bimg.decode().catch(function(){}) : Promise.resolve();
-    decoded.then(function(){ requestAnimationFrame(function(){ requestAnimationFrame(begin); }); });
+    decoded.then(function(){ awDiag.dec = Math.round(performance.now() - armedAt); requestAnimationFrame(function(){ awDiag.f1 = Math.round(performance.now() - armedAt); requestAnimationFrame(function(){ awDiag.f2 = Math.round(performance.now() - armedAt); begin(); }); }); });
   } catch(e1){ begin(); }
 }
 function screenAward(){
@@ -12906,7 +12918,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-11 IT11";
+var APP_BUILD = "2026-11-11 IT12";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13107,6 +13119,30 @@ function rotateMsgUpdate(){
 // A new screen is shown only when every picture on it has arrived (2026-10-27, per Dan: on the Anamaria screen some pictures came in late). The pictures of the whole game are also fetched in the background
 // soon after the app starts (pixPreloadAll), so this wait is hardly ever seen. The wait is never longer than 1.5 seconds, and the sky behind the screen stays up (no dark flash).
 var holdToken = 0;
+// (2026-11-11, per Dan: the Sudoku squares were blank for half a second) Pictures set inline as CSS backgrounds (Sacred Sudoku's squares and picture buttons) that this page has not decoded yet: found here, loaded and decoded
+// before the screen is shown, then kept in pixBgWarm so that they stay decoded. All 16 faith_tile8 pictures are done together (the later puzzles use other ones of them).
+var pixBgWarm = {};
+function pixBgNew(app){
+  var out = [];
+  function add(u){ if(u && u.indexOf("data:") !== 0 && !pixBgWarm[u] && out.indexOf(u) === -1) out.push(u); }
+  [].forEach.call(app.querySelectorAll('[style*="background-image"]'), function(el){
+    var m = /url\(\s*["']?([^"')]+)["']?\s*\)/.exec(el.getAttribute("style") || "");
+    if(!m) return;
+    add(m[1]);
+    if(m[1].indexOf("faith_tile8_") !== -1){ for(var k = 0; k < 16; k++) add(m[1].replace(/faith_tile8_\d+/, "faith_tile8_" + (k < 10 ? "0" : "") + k)); }
+  });
+  return out;
+}
+function pixSudokuWarm(){
+  for(var k = 0; k < 16; k++){
+    (function(u){
+      if(pixBgWarm[u]) return;
+      var bi = new Image();
+      bi.onload = function(){ if(bi.decode) bi.decode().then(function(){ pixBgWarm[u] = bi; }, function(){ pixBgWarm[u] = bi; }); else pixBgWarm[u] = bi; };
+      bi.src = u;
+    })("tiles/faith_tile8_" + (k < 10 ? "0" : "") + k + ".png");
+  }
+}
 function pixHoldUntilLoaded(app){
   if(PIX_OFF) return;
   // (2026-11-04, per Dan's event log: on his iPhone a picture that was drawn into the page counts as "not complete" for a few milliseconds even when it has long been fetched and decoded, so EVERY new screen
@@ -13117,14 +13153,22 @@ function pixHoldUntilLoaded(app){
     var s = im.getAttribute("src");
     return !(s && pixReady[s.indexOf("data:") === 0 ? s : pixAbs(s)]);
   });
-  if(!pending.length) return;
+  var bgNew = pixBgNew(app);
+  if(!pending.length && !bgNew.length) return;
   var t0 = performance.now(), scr = state.screen, shown = false, wid = pixWaitBegin();
-  dbgLog("assets: HIDDEN " + scr + " was drawn with " + pending.length + " picture(s) not complete: the screen stays hidden until they are");
+  dbgLog("assets: HIDDEN " + scr + " was drawn with " + pending.length + " picture(s) not complete" + (bgNew.length ? " and " + bgNew.length + " background picture(s) not decoded yet" : "") + ": the screen stays hidden until they are");
   app.classList.add("assetsWait");
-  var left = pending.length;
+  var left = pending.length + bgNew.length;
   function reveal(){ pixWaitEnd(wid); if(mine === holdToken){ app.classList.remove("assetsWait"); if(!shown){ shown = true; dbgLog("assets: HIDDEN " + scr + " shown again after " + Math.round(performance.now() - t0) + " ms"); } } }
   function one(){ if(--left <= 0) reveal(); }
   pending.forEach(function(im){ im.addEventListener("load", one); im.addEventListener("error", one); });
+  bgNew.forEach(function(u){
+    var bi = new Image(), got = false;
+    function fin(){ if(got) return; got = true; pixBgWarm[u] = bi; one(); }
+    bi.onload = function(){ if(bi.decode) bi.decode().then(fin, fin); else fin(); };
+    bi.onerror = fin;
+    bi.src = u;
+  });
   setTimeout(reveal, 1500);
 }
 // Every picture of the game (tiles/, all the .png and .jpg: 299 of them, about 5.6 MB), fetched a few at a time in the background after the first screen is up. New pictures put in tiles/ must be added to this list.
@@ -13170,7 +13214,7 @@ function pixBgNext(){
     })(pixBgQ.shift());
   }
   if(!pixBgRunning && !pixBgQ.length && !pixBgAllDone){
-    pixBgAllDone = true; pixBgPicturesDone();
+    pixBgAllDone = true; pixBgPicturesDone(); pixSudokuWarm();
     dbgLog("assets: every picture and sound is loaded, " + Math.round(performance.now() / 1000) + " s after the page loaded");
     pixWarmSounds();
   }
