@@ -6977,10 +6977,6 @@ var WG_COLORS = ["#52C246", "#3A93E8", "#F2B632", "#E85A9B", "#9A5CC8", "#F58B2A
 var WG_GROUPS = [
   {en:{n:"Apostles", w:["PETER","ANDREW","JAMES","JOHN","PHILIP","THOMAS","SIMON","JUDE"]},
    es:{n:"Apostoli", w:["PIETRO","ANDREA","GIACOMO","GIOVANNI","FILIPPO","TOMMASO","SIMONE","TADDEO","MATTEO","GIUDA"]}},
-  {en:{n:"Prophets", w:["ISAIAH","ELIJAH","ELISHA","SAMUEL","DANIEL","AMOS","JONAH","MICAH","JOEL","HOSEA"]},
-   es:{n:"Profeti", w:["ISAIA","ELIA","ELISEO","SAMUELE","DANIELE","AMOS","GIONA","MICHEA","GIOELE","OSEA"]}},
-  {en:{n:"Men of Genesis", w:["NOAH","ADAM","ABEL","CAIN","ISAAC","JACOB","ESAU","LOT","ABRAHAM"]},
-   es:{n:"Uomini della Genesi", w:["NOÈ","ADAMO","ABELE","CAINO","ISACCO","GIACOBBE","ESAÙ","LOT","ABRAMO"]}},
   {en:{n:"Women of the Bible", w:["RUTH","ESTHER","MARY","MARTHA","EVE","SARAH","RACHEL","HANNAH","NAOMI","JUDITH","LEAH"]},
    es:{n:"Donne della Bibbia", w:["RUT","ESTER","MARIA","MARTA","EVA","SARA","RACHELE","ANNA","NOEMI","GIUDITTA","LIA"]}},
   {en:{n:"Bible Places", w:["EGYPT","SINAI","JORDAN","EDEN","CANA","EMMAUS","BABEL","TABOR","ZION","GALILEE"]},
@@ -6993,8 +6989,12 @@ var WG_GROUPS = [
    es:{n:"Animali", w:["LEONE","COLOMBA","PECORA","ASINO","CORVO","VIPERA","PESCE","CAMMELLO"]}},
   {en:{n:"Food and Drink", w:["BREAD","WINE","HONEY","OLIVE","GRAPES","FIGS","WHEAT","MANNA","MILK","OIL"]},
    es:{n:"Cibo e Bevande", w:["PANE","VINO","MIELE","OLIVA","UVA","FICHI","GRANO","MANNA","LATTE","OLIO"]}},
-  {en:{n:"Saints", w:["CLARE","TERESA","AGNES","LUCY","MONICA","RITA","BRUNO","GEMMA"]},
-   es:{n:"Santi", w:["CHIARA","TERESA","AGNESE","LUCIA","MONICA","RITA","BRUNO","GEMMA"]}}
+  {en:{n:"Bible Objects", w:["ARK","STAFF","SLING","HARP","NET","SCROLL","BASKET","MANGER","TENT"]},
+   es:{n:"Oggetti della Bibbia", w:["ARCA","BASTONE","FIONDA","ARPA","RETE","ROTOLO","CESTO","TENDA","MANGIATOIA"]}},
+  {en:{n:"Sky and Weather", w:["SUN","MOON","STAR","CLOUD","RAIN","WIND","STORM","HAIL","RAINBOW"]},
+   es:{n:"Cielo e Meteo", w:["SOLE","LUNA","STELLA","NUVOLA","PIOGGIA","VENTO","TUONO","FULMINE","GRANDINE","ARCOBALENO"]}},
+  {en:{n:"Bible Clothing", w:["ROBE","CLOAK","SANDAL","CROWN","BELT","TUNIC","RING","VEIL"]},
+   es:{n:"Vesti della Bibbia", w:["TUNICA","MANTO","CORONA","ANELLO","VELO","ABITO","SANDALO","CINTURA"]}}
 ];
 // does any row hold only words of one group?
 function wgRowDone(cells, n, r){
@@ -12918,7 +12918,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-11 IT12";
+var APP_BUILD = "2026-11-14 IT13";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
