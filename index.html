@@ -2237,20 +2237,22 @@ function defaultState(){
   };
 }
 
-// Switched from localStorage to sessionStorage (2026-09-29, per Dan) — a
-// booth device reopening the same URL across separate deploys/visits kept
-// resuming the previous participant's saved progress, since localStorage
-// persists indefinitely for the origin regardless of which tab or visit
-// wrote it. sessionStorage is scoped to the one browser tab: a genuinely
-// new visit (a fresh QR scan opening its own tab) always starts clean, but
-// the ORIGINAL persistence requirement — surviving the player backgrounding
-// the app or taking a phone call mid-mission — still holds, since mobile
-// browsers keep a backgrounded tab's sessionStorage intact and restore it
-// even after the OS evicts the tab's process under memory pressure. Only
-// an actual tab close (or the in-app CLEAR TICKET, unchanged) starts over.
+// Progress is remembered (2026-11-14, per Dan: a tester closed the game completely, reopened it, and nothing was saved).
+// History: it was sessionStorage (one browser tab) from 2026-09-29, so that a booth device opening the link for the next visitor started clean; phones need the opposite, so it is localStorage now.
+// A browser session that has just begun (the app was closed completely and opened again) is a "cold start": the saved progress is kept, but the player lands on the Welcome screen, with the game that was in
+// progress dropped (each game starts from its first round anyway) and the Keep Going / badge / Missions-window leftovers cleared. A tab that only went to the background and came back keeps everything
+// as it was. Nothing but CLEAR MISSIONS (first ticket), clearing the browser's data / uninstalling the app, or ?fresh at the end of the address (testing) starts the progress over.
+var LIVE_KEY = "fevidaItLiveTab";
 function loadState(){
   try{
-    var raw = sessionStorage.getItem(STORAGE_KEY);
+    var live = null;
+    try{ live = sessionStorage.getItem(LIVE_KEY); sessionStorage.setItem(LIVE_KEY, "1"); }catch(e0){}
+    if(!live && /[?&]fresh(=|&|$)/.test(location.search)){          // testing: wipe this phone's saved progress once (the first load in this tab only, so a reload does not wipe it again)
+      try{ localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem(STORAGE_KEY); }catch(e1){}
+    }
+    var raw = null;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e2){}
+    if(!raw){ try{ raw = sessionStorage.getItem(STORAGE_KEY); }catch(e3){} }          // a tab saved by the earlier build
     if(!raw) return defaultState();
     var parsed = JSON.parse(raw);
     var d = defaultState();
@@ -2265,12 +2267,18 @@ function loadState(){
     delete merged.photo;               // a photo saved in this tab by an older version is dropped: the app keeps no photo now
     // a tab saved before the music slider was rescaled would sound far too quiet at its old setting: it starts at the top of the new slider
     if(!parsed.musicScale){ merged.volMusic = 60; merged.musicScale = 2; }
+    if(!live){          // cold start: the progress stays, the player starts again from the Welcome screen
+      merged.session = defaultState().session;
+      merged.awardMissionId = null; merged.contFor = null; merged.folderOpen = false; merged.introMission = null;
+      if(merged.lang) merged.screen = "welcome";
+    }
     return merged;
   }catch(e){ return defaultState(); }
 }
 
 function saveState(){
-  try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  var s = JSON.stringify(state);
+  try{ localStorage.setItem(STORAGE_KEY, s); }catch(e){ try{ sessionStorage.setItem(STORAGE_KEY, s); }catch(e2){} }
 }
 
 var state = loadState();
@@ -12918,7 +12926,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-14 IT13";
+var APP_BUILD = "2026-11-14 IT14";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
