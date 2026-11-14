@@ -6545,17 +6545,28 @@ function sdPlace(v){
   if(done){ sdFinishPuzzle(s); return; }
   pixSfxPlay(clash ? "fmMiss" : "fmFirst", true);
   saveState(); render();
-  // A picture that breaks the rule glows red, and after 2 seconds that picture -- the one just placed, which caused the red -- clears itself, so
-  // there is no need to tap the X (2026-10-22, per Dan). Other red squares are left alone, and the starting and hinted pictures never clear.
+  // A picture that breaks the rule glows red, and after 2 seconds the WRONG one of the clashing pictures clears itself (2026-11-14, per Dan; it used to be always the one just placed, which was
+  // the right one when the clash was with an earlier wrong picture, and the player was stuck): of the squares that clash with the one just placed, and of that square, the player's own pictures that
+  // are not the puzzle's answer are taken off. A right picture always stays; the starting and hinted pictures are always right, so they never clear.
   if(clash){
     var level = s.level, pos = s.sel;
     setTimeout(function(){
       var s2 = state.session.sacredSudoku;
       if(!s2 || s2 !== s || s2.level !== level || s2.done || s2.status !== "playing") return;
-      var lv2 = s2.levels[s2.level];
+      var lv2 = s2.levels[s2.level], n2 = lv2.n;
       if(s2.cells[pos] !== v || lv2.puz[pos] !== 0 || s2.hinted.indexOf(pos) !== -1) return;   // it has been changed or cleared already
       if(!sdClashes(s2.cells, lv2)[pos]) return;                                                // it is no longer breaking the rule
-      s2.cells[pos] = 0;
+      var group = [pos], rp = Math.floor(pos / n2), cp = pos % n2, j;
+      for(j = 0; j < n2 * n2; j++){
+        if(j === pos || s2.cells[j] !== v) continue;
+        var rj = Math.floor(j / n2), cj = j % n2;
+        if(rj === rp || cj === cp || (Math.floor(rp / lv2.br) === Math.floor(rj / lv2.br) && Math.floor(cp / lv2.bc) === Math.floor(cj / lv2.bc))) group.push(j);
+      }
+      var cleared = false;
+      group.forEach(function(g){
+        if(lv2.puz[g] === 0 && s2.hinted.indexOf(g) === -1 && s2.cells[g] !== lv2.sol[g]){ s2.cells[g] = 0; cleared = true; }
+      });
+      if(!cleared) return;
       saveState(); render();
     }, 2000);
   }
@@ -12926,7 +12937,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-14 IT14";
+var APP_BUILD = "2026-11-14 IT15";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
