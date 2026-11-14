@@ -11476,8 +11476,8 @@ var HGL_LAYOUT2 = [
   {ci: 2, fx: 62.6, fy: 62.5}                                 // yellow open flower
 ];
 var HGL_LAYOUT3 = [
-  {ci: 0, fx: 59.5, fy: 44.3, ang: 346.1},                    // red funnel flower
-  {ci: 2, fx: 12.6, fy: 37.5, ang: 11.7},                     // yellow funnel flower
+  {ci: 0, fx: 59.5, fy: 44.3, ang: 346.1, stem: "down", up: 8},      // red funnel flower (the stem and its mound run down, below the flower: 2026-11-14, per Dan)
+  {ci: 2, fx: 12.6, fy: 37.5, ang: 11.7, stem: "down", up: 13},       // yellow funnel flower (the same)
   {ci: 4, fx: 44.3, fy: 71.6},                                // blue open flower
   {ci: 6, fx: 88.8, fy: 43.9}                                 // purple open flower
 ];
@@ -12166,15 +12166,15 @@ function hglFunnelDraw(x, g, hx, hy, ax, ay, rLen, K, glow){
   }
 }
 // the earth mound, the stem (straight to the nearest edge of the dirt, as round 1's runs to the bottom), its two leaves and the funnel of a flower; its head is drawn afterwards
-function hglFlowerAt(x, g, ci, hx, hy, ax, ay, rLen, K, back){
+function hglFlowerAt(x, g, ci, hx, hy, ax, ay, rLen, K, back, down){
   var dT = hy - g.y, dB = g.y + g.h - 1 - hy, dL = hx - g.x, dR = g.x + g.w - 1 - hx, m = Math.min(dT, dB, dL, dR), ex, ey, vert, mx, my, i, j, t, pts = [], edge;
   if(back){                                                        // straight back from the funnel until it meets an edge of the dirt
     var x0 = g.x + 4, x1 = g.x + g.w - 5, y0 = g.y + 4, y1 = g.y + g.h - 5, bx = -ax, by = -ay, tt = 9999, hit = "";
     if(bx > .001 && (x1 - hx) / bx < tt){ tt = (x1 - hx) / bx; hit = "R"; } if(bx < -.001 && (x0 - hx) / bx < tt){ tt = (x0 - hx) / bx; hit = "L"; }
     if(by > .001 && (y1 - hy) / by < tt){ tt = (y1 - hy) / by; hit = "B"; } if(by < -.001 && (y0 - hy) / by < tt){ tt = (y0 - hy) / by; hit = "T"; }
     tt = Math.max(0, tt); ex = Math.round(hx + bx * tt); ey = Math.round(hy + by * tt); edge = hit || "B";
-  } else edge = m === dB ? "B" : m === dT ? "T" : m === dL ? "L" : "R";
-  if(edge === "B"){ if(!back){ ex = hx; ey = g.y + g.h - 5; } vert = true; mx = ex + 1; my = ey + 2; }
+  } else edge = down ? "B" : m === dB ? "B" : m === dT ? "T" : m === dL ? "L" : "R";          // (down: the stem runs to the bottom edge, below the flower)
+  if(edge === "B"){ if(!back){ ex = hx; ey = g.y + g.h - 5 - (down ? down.up : 0); } vert = true; mx = ex + 1; my = ey + 2; }          // (down: the stem stops down.up pixels short of the edge (red 8, yellow 13), a little shorter, 2026-11-14, per Dan)
   else if(edge === "T"){ if(!back){ ex = hx; ey = g.y + 4; } vert = true; mx = ex + 1; my = ey - 2; }
   else if(edge === "L"){ if(!back){ ex = g.x + 4; ey = hy; } vert = false; mx = ex - 2; my = ey + 1; }
   else { if(!back){ ex = g.x + g.w - 5; ey = hy; } vert = false; mx = ex + 2; my = ey + 1; }
@@ -12208,7 +12208,7 @@ function hglDrawLayout(x, W, H, topH, g, lay){
     items.forEach(function(q){ q.x = Math.max(g.x + q.rad + 1, Math.min(g.x + g.w - 1 - q.rad - 1, q.x)); q.y = Math.max(g.y + q.rad + 1, Math.min(g.y + g.h - 1 - q.rad - 1, q.y)); });
   }
   items.forEach(function(q){ q.x = Math.round(q.x); q.y = Math.round(q.y); });
-  items.forEach(function(q){ if(q.fun) hglFlowerAt(x, g, q.f.ci, q.x, q.y, q.ax, q.ay, rLen, K, q.f.stem === "opp"); });
+  items.forEach(function(q){ if(q.fun) hglFlowerAt(x, g, q.f.ci, q.x, q.y, q.ax, q.ay, rLen, K, q.f.stem === "opp", q.f.stem === "down" ? {up: q.f.up || 0} : null); });
   items.forEach(function(q){
     if(q.fun) x.drawImage(hglFlowerSprite(q.f.ci, D, q.ax, q.ay), Math.round(q.x - D / 2), Math.round(q.y - D / 2));
     else x.drawImage(hgHeadSprite(q.f.ci, TD, sc), Math.round(q.x - TD / 2), Math.round(q.y - TD / 2));
@@ -12937,7 +12937,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-14 IT15";
+var APP_BUILD = "2026-11-14 IT16";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
