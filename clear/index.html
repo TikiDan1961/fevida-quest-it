@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Fe y Vida Quest</title>
+<style>
+  html,body{margin:0;height:100%;background:#4FB0F2;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#101a3a}
+  body{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px}
+  .box{background:#fdf1d6;border:4px solid #101a3a;border-radius:14px;padding:22px 20px;max-width:340px}
+  h1{font-size:22px;margin:0 0 8px} p{margin:6px 0;font-size:16px;line-height:1.35} a{color:#1d5fc4;font-weight:700}
+</style>
+</head>
+<body>
+<div class="box"><h1 id="t">Cancello...</h1><p id="m"></p><p><a id="go" href="../">Apri il gioco</a></p></div>
+<script>
+/* /clear (2026-11-14, per Dan): wipes this phone's saved game (progress, badges, points, tickets) and opens the game from the start. /clear/?all also removes the saved copy of the game (cache and service worker), so the newest build loads. Analytics settings and the Emmaus editor are left alone. */
+(function(){
+  var all = /[?&]all(=|&|$)/.test(location.search), msg = [];
+  function done(){
+    document.getElementById("t").textContent = "Fatto! Si riparte da capo...";
+    document.getElementById("m").textContent = msg.join(" ");
+    setTimeout(function(){ location.replace("../"); }, 1400);
+  }
+  try{
+    var n = 0, i, k;
+    for(i = localStorage.length - 1; i >= 0; i--){ k = localStorage.key(i); if(k && /QuestState/.test(k)){ localStorage.removeItem(k); n++; } }
+    sessionStorage.clear();
+    msg.push("Progressi, medaglie e punti cancellati.");
+  }catch(e){ msg.push("Questo browser non mi ha permesso di cancellare i progressi."); }
+  if(!all){ done(); return; }
+  var jobs = [];
+  try{ if(window.caches) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })); }catch(e){}
+  try{ if(navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister(); })); })); }catch(e){}
+  Promise.all(jobs).then(function(){ msg.push("Anche la copia salvata del gioco e' stata cancellata."); done(); }, function(){ done(); });
+})();
+</script>
+</body>
+</html>
