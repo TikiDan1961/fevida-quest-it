@@ -3808,6 +3808,7 @@ function pilgrimInit(isNew){
   pilgrimPlace(el, pilgrimPos, 0);
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var dist = target - pilgrimPos;
+  if(!pilgrimAward && dist > 0.0005 && !pilgrimAllowBack) pilgrimAward = "walk";       // (2026-11-15, per Dan) a walk picked up again after the app was closed mid-walk blocks the icons too
   if(pilgrimAward) pilgrimBusy(el, true);                  // nothing can be tapped until he has arrived
   if(pilgrimAward === "great"){
     pilgrimGreetTimer = setTimeout(function(){ if(el.isConnected) pilgrimSay(t("pilgrimGreat"), null, 1800); }, 600);
@@ -12945,7 +12946,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-14 IT18";
+var APP_BUILD = "2026-11-15 IT19";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
