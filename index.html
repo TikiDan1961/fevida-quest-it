@@ -1638,7 +1638,7 @@ var T = {
     cj_body:"Go to the Fe y Vida booth (#301) to have a joyful instant photo taken with a friend! Once you've done it, tap the button below.",
     awardTitle:"Mission Complete!",
     awardBody:function(pts,badge){return "You won "+pts+" Quest Points and unlocked the "+badge+" Badge!";},
-    awardBodyNoPts:function(badge){return "You unlocked the "+badge+" Badge!";}, awardBodyPtsOnly:function(pts){return "You won "+pts+" Quest Points!";}, awardBodyJoy:"Thank you for choosing joy!",
+    awardBodyNoPts:function(badge){return "You unlocked the "+badge+" Badge!";}, awardBodyPtsOnly:function(pts){return "You won "+pts+" Quest Points!";}, awardBodyJoy:"Thank you for sharing joy!",
     passportTitle:"Fe y Vida Passport",
     missionBadge:function(n){return "MISSION "+n+" BADGE";},
     badgeLocked:"???",
@@ -1817,7 +1817,7 @@ var T = {
     cj_body:"Passa allo stand di Fe y Vida (#301) per farti una divertente foto istantanea con un amico! Quando hai finito, tocca il pulsante qui sotto.",
     awardTitle:"Missione Compiuta!",
     awardBody:function(pts,badge){return "Hai guadagnato "+pts+" Punti Avventura e sbloccato il sigillo "+badge+"!";},
-    awardBodyNoPts:function(badge){return "Hai sbloccato il sigillo "+badge+"!";}, awardBodyPtsOnly:function(pts){return "Hai guadagnato "+pts+" Punti Avventura!";}, awardBodyJoy:"Grazie per aver scelto la gioia!",
+    awardBodyNoPts:function(badge){return "Hai sbloccato il sigillo "+badge+"!";}, awardBodyPtsOnly:function(pts){return "Hai guadagnato "+pts+" Punti Avventura!";}, awardBodyJoy:"Grazie per aver condiviso la gioia!",
     passportTitle:"Passaporto Fe y Vida",
     missionBadge:function(n){return "SIGILLO MISSIONE "+n;},
     badgeLocked:"???",
@@ -10678,11 +10678,26 @@ function emFit(){
 }
 window.addEventListener("resize", function(){ if(state.screen === "emmaus"){ emFit(); emLoopStart(); } });
 window.addEventListener("orientationchange", function(){ setTimeout(function(){ if(state.screen === "emmaus"){ emFit(); emLoopStart(); } }, 250); });
+// (2026-11-15, per Dan) the phone's own "portrait / landscape changed" signal: a phone that reports its new position a moment AFTER the resize left the game unfitted (emFit and hglFit do nothing while the phone still
+// says it is upright). So the game is fitted again when the position changes, and a few more times over the next second.
+try {
+  var landMq = window.matchMedia("(orientation:portrait)");
+  var landMqFn = function(){
+    [0, 120, 350, 800].forEach(function(ms){
+      setTimeout(function(){
+        if(state.screen === "emmaus"){ emFit(); emLoopStart(); }
+        else if(state.screen === "hopeGardenL"){ hglFit(); hglLoopStart(); }
+      }, ms);
+    });
+  };
+  if(landMq.addEventListener) landMq.addEventListener("change", landMqFn); else if(landMq.addListener) landMq.addListener(landMqFn);
+} catch(e){}
 var EM_PERFECT_MS = 2500;          // the PERFECT! window stays up this long (the same time as a badge screen), then ROUND X COMPLETED!
 function emJump(){ var p = em.p; if(em.gnd){ p.vy = EM_V0; pixSfxPlay("jlBounce", false); } else p.buf = .13; }          // the jump: sound_effect_14 (2026-10-28, per Dan)
           // a tap just before landing counts when the feet touch down
 function emDown(ev){
   if(!em || em.confirm || (em.mode !== "ready" && em.mode !== "play")) return;
+  if(hglUpright() || rotateMsgShowing() || !em.L) return;          // (2026-11-15, per Dan) a tap does nothing while the game is not on the screen: phone upright, the rotate message up, or the picture not drawn yet
   if(ev && ev.preventDefault) ev.preventDefault();
   if(pixAudioStale) pixReviveOnTap();
   if(em.mode === "ready"){ em.mode = "play"; em.last = performance.now(); var rd = document.querySelector(".emReady"); if(rd && rd.parentNode) rd.parentNode.removeChild(rd); emJump(); return; }          // (the tap that starts a round is also a jump, 2026-10-28, per Dan)
@@ -12946,7 +12961,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-15 IT19";
+var APP_BUILD = "2026-11-15 IT20";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
