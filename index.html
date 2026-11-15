@@ -145,7 +145,7 @@
   html{background:#4FB0F2;}
   /* (2026-11-09, per Dan's second iPhone test: "it works but it's not pretty": a blue bar at the bottom, a flash and a jump when the phone is turned back.) For a moment after the phone comes back upright a cover of the Rotate message's colour stays over the page, and fades away once the page has been put right, so the correction is not seen. */
   #vpCover{position:fixed;left:-80px;top:-80px;right:-80px;bottom:-80px;background:#1D2350;opacity:0;pointer-events:none;z-index:99998;transition:opacity .35s ease-out;}
-  html.vpHold #vpCover{opacity:1;transition:none;}
+  html.vpHold #vpCover{opacity:1;transition:none;pointer-events:auto;}          /* (2026-11-15, per Dan) the cover takes the touch: nothing behind it can be started while it hides the game */
   html.vpFix #app{height:var(--appH);}          /* (only while the numbers disagree: the class is put on by vpResync) */
   .screen{
     flex:1;
@@ -1426,6 +1426,9 @@ var quitAsk = false, quitAskScreen = null, quitRafQ = [], quitTimerQ = [], rotHo
   window.clearTimeout = function(id){ quitTimerQ = quitTimerQ.filter(function(q){ return q.id !== id; }); ct(id); };
   ["pointerdown","pointermove","pointerup","pointercancel","touchstart","touchmove","touchend","touchcancel","mousedown","mousemove","mouseup"].forEach(function(type){
     window.addEventListener(type, function(e){
+      if((type === "pointerdown" || type === "touchstart" || type === "mousedown") && document.documentElement.classList.contains("vpHold")){          // (2026-11-15, per Dan) the purple cover after a turn of the phone is up: a new touch is not heard by anything
+        e.stopImmediatePropagation(); return;
+      }
       if(!quitAsk && (rotGate || performance.now() < rotGateUntil)){          // (2026-11-06, per Dan) the tap that starts the game again is not a move of the game, nor is the rest of that tap
         if(type === "pointerdown" && typeof dbgLog === "function"){ var nowT = performance.now(); if(nowT - (window.pixSwallowLogT || 0) > 800){ window.pixSwallowLogT = nowT; dbgLog("tap: SWALLOWED by the rotate pause (" + (rotGate ? "waiting for the tap to start" : "the tap just after it") + ", " + state.screen + ")"); } }
         if(rotGate && (type === "pointerdown" || type === "touchstart" || type === "mousedown")){
@@ -10697,7 +10700,7 @@ function emJump(){ var p = em.p; if(em.gnd){ p.vy = EM_V0; pixSfxPlay("jlBounce"
           // a tap just before landing counts when the feet touch down
 function emDown(ev){
   if(!em || em.confirm || (em.mode !== "ready" && em.mode !== "play")) return;
-  if(hglUpright() || rotateMsgShowing() || !em.L) return;          // (2026-11-15, per Dan) a tap does nothing while the game is not on the screen: phone upright, the rotate message up, or the picture not drawn yet
+  if(hglUpright() || rotateMsgShowing() || !em.L || document.documentElement.classList.contains("vpHold")) return;          // (2026-11-15, per Dan) a tap does nothing while the game is not on the screen: phone upright, the rotate message up, or the picture not drawn yet
   if(ev && ev.preventDefault) ev.preventDefault();
   if(pixAudioStale) pixReviveOnTap();
   if(em.mode === "ready"){ em.mode = "play"; em.last = performance.now(); var rd = document.querySelector(".emReady"); if(rd && rd.parentNode) rd.parentNode.removeChild(rd); emJump(); return; }          // (the tap that starts a round is also a jump, 2026-10-28, per Dan)
@@ -12961,7 +12964,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-15 IT20";
+var APP_BUILD = "2026-11-15 IT21";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
