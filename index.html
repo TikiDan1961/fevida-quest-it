@@ -3556,10 +3556,12 @@ function pilgrimTap(){
 // sequence; "great" = about to speak; "walk" = walking.
 var pilgrimAward = null;
 var pilgrimAllowBack = false;        // true after CLEAR TICKET, until he has walked back to the start
+var pilgrimEntering = false;         // he is stepping through the church door right now (the doorway code starts the church scene itself)
 function pilgrimBusy(el, on){ var scr = el && el.closest(".screen"); if(scr) scr.classList.toggle("pilgrimBusy", on); }
 // The 5th stop is the church door, and there he goes in (2026-10-22, per Dan): he steps up into the doorway and is gone. From then on he stays inside
 // (state.pilgrimIn), and the icons can be tapped again once he is in.
 function pilgrimEnter(el){
+  pilgrimEntering = true;
   track("church_reached", {seconds_since_open: phSecs(phT0)});
   pilgrimAward = null; pilgrimGreetPending = false; pilgrimHide();
   el.classList.remove("walking", "hop");
@@ -3571,6 +3573,7 @@ function pilgrimEnter(el){
     state.pilgrimIn = true; saveState();
     if(el.isConnected) el.style.visibility = "hidden";
     pixAfterSfx("churchBell", function(){
+      pilgrimEntering = false;
       if(el.isConnected) pilgrimBusy(el, false);
       if(ticketWalkDue() && state.screen === "mainMenu") go("churchWalk");        // inside: up the aisle to the altar, and the Golden Ticket
     });
@@ -3795,6 +3798,10 @@ function pilgrimInit(isNew){
   if(state.pilgrimIn && !pilgrimAllowBack){                // he is in the church: nothing to draw
     pilgrimPos = 1; pilgrimAward = null;
     el.style.visibility = "hidden"; el.style.pointerEvents = "none";
+    // (2026-11-14, per Dan) the app was closed during the church scene: he is inside but the ticket was never handed over, so the scene plays again
+    if(!pilgrimEntering && state.screen === "mainMenu" && ticketWalkDue()){
+      pilgrimGreetTimer = setTimeout(function(){ if(!pilgrimEntering && state.screen === "mainMenu" && state.pilgrimIn && ticketWalkDue()) go("churchWalk"); }, 500);
+    }
     return;
   }
   pilgrimPlace(el, pilgrimPos, 0);
@@ -12937,7 +12944,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-14 IT16";
+var APP_BUILD = "2026-11-14 IT17";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
