@@ -13043,7 +13043,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT30";
+var APP_BUILD = "2026-11-16 IT31";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13978,7 +13978,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener("resize", func
 
 
 // ---- ROUND MEMORY (2026-11-16, per Dan; see round_memory_fix.py) ----
-var PIX_ROUND_GAMES = {faithFlash:1, faithMatch:1, followLight:1, wordUnscramble:1, catchLight:1, emojiStories:1, jesusTimeline:1, sacredSudoku:1, wordTrail:1, wordGroups:1, mustardSeed:1, prayBeads:1, pilgrimRoad:1, dovePeace:1, fruitsSpirit:1, jacobLadder:1, stainedGlass:1, emmaus:1};
+var PIX_ROUND_GAMES = {faithFlash:1, faithMatch:1, followLight:1, wordUnscramble:1, catchLight:1, emojiStories:1, jesusTimeline:1, sacredSudoku:1, wordTrail:1, wordGroups:1, mustardSeed:1, prayBeads:1, pilgrimRoad:1, dovePeace:1, fruitsSpirit:1, jacobLadder:1, stainedGlass:1, emmaus:1, hopeGarden:1};
 function pixRoundsDone(id){ var m = state.missions && state.missions[id]; return (m && typeof m.rounds === "number" && m.rounds > 0) ? m.rounds : 0; }
 function pixRoundsSet(id, n){
   var m = state.missions && state.missions[id];
@@ -13989,6 +13989,7 @@ function pixRoundsSet(id, n){
 // the ROUND X COMPLETED! screen of a round is up (s = the game, with its interlude): a finished round is remembered; the last one clears the memory (the game is won)
 function pixRoundsNote(id, s){
   try {
+    if(id === "hopeGardenL") id = "hopeGarden";               // (the landscape Hope Garden is the mission "hopeGarden")
     if(!PIX_ROUND_GAMES[id] || !s || !s.interlude) return;
     if(id === "emmaus" && s.test) return;                      // (a test play from the level editor)
     pixRoundsSet(id, s.interlude.final ? 0 : s.interlude.n);
@@ -14065,6 +14066,12 @@ function pixRoundsApply(id){
   if(typeof fmBase === "function") window.initFaithMatchLevel = function(levelIdx){
     if(levelIdx === 0){ var k = pixRoundsDone("faithMatch"); if(k > 0) levelIdx = Math.min(k, MATCH_LEVELS.length - 1); }
     return fmBase.call(this, levelIdx);
+  };
+  // Hope Garden (2026-11-16, per Dan: it remembers too, same rules): the game is made inside hglFit with hglSetRound(0); a game made at round 1 moves to the remembered round
+  var hsBase = window.hglSetRound;
+  if(typeof hsBase === "function") window.hglSetRound = function(r){
+    if(r === 0){ var k = pixRoundsDone("hopeGarden"); if(k > 0) r = Math.min(k, HGL_ROUNDS.length - 1); }
+    return hsBase.call(this, r);
   };
   // CLEAR MISSIONS (the first ticket's prize) and the old CLEAR TICKET start the games over: no round is remembered any more
   var cmBase = window.clearMissionsGo;
