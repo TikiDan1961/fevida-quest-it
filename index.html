@@ -148,8 +148,10 @@
   html.vpHold #vpCover{opacity:1;transition:none;pointer-events:auto;}          /* (2026-11-15, per Dan) the cover takes the touch: nothing behind it can be started while it hides the game */
   html.vpFix #app{height:var(--appH);}
   /* (2026-11-16, per Dan's log) the button that wakes the sound when no swipe can: see sound_pill_fix.py */
-  .soundPill{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);z-index:99000;padding:10px 16px;border:3px solid #0D1030;border-radius:12px;background:#FFC93A;color:#0D1030;
-    font:700 15px "Jersey 10","Pixelify Sans",ui-monospace,monospace;letter-spacing:.04em;box-shadow:0 3px 0 #0D1030;max-width:calc(100vw - 24px);white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}          /* (only while the numbers disagree: the class is put on by vpResync) */
+  .soundPill{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:99000;padding:8px 12px;border:3px solid #0D1030;border-radius:12px;background:#FFC93A;color:#0D1030;
+    font:700 14px "Jersey 10","Pixelify Sans",ui-monospace,monospace;letter-spacing:.02em;box-shadow:0 3px 0 #0D1030;max-width:calc(100vw - 24px);white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .soundPill.soundPillDown{transform:translateX(-50%) translateY(2px);box-shadow:0 1px 0 #0D1030;filter:brightness(.92);}
+  .soundPill.soundPillBusy{background:#6FD04A;}          /* (only while the numbers disagree: the class is put on by vpResync) */
   .screen{
     flex:1;
     display:flex;
@@ -2890,16 +2892,25 @@ function pixFreshAudio(){
 var pixPillEl = null, pixPillAt = 0;
 function pixSoundPillShown(){ return !!(pixPillEl && pixPillEl.parentNode); }
 function pixSoundPillWords(){ return state.lang === "es" ? "TOCCA PER RIATTIVARE L\u2019AUDIO" : "TAP TO TURN THE SOUND BACK ON"; }
+// (2026-11-16, second version, per Dan: "whenever it appears it's not accepting a tap") Every kind of touch event of the button is heard (pointerdown, pointerup, touchend, mouseup, click): the first one of a tap makes the new
+// engine and says "tapped" on the button, and EVERY end of a touch (pointerup, touchend, click) wakes the engine again, because a phone starts the sound from the end of a touch and the one that counts is not always the first one
+// (what worked on the Main Menu was an engine made at pointerup and woken at touchend). The button shows that it has been tapped (it turns green and says SOUND... for a moment), and every event is written to the event log.
 function pixSoundPillTap(e){
-  if(e){ if(e.preventDefault) e.preventDefault(); if(e.stopPropagation) e.stopPropagation(); }
-  var now = performance.now(); if(now - pixPillAt < 700) return;          // (a touch makes a touchend and may make a click: one engine for the tap)
-  pixPillAt = now;
-  var c0 = pixAudioCtx; try { if(c0 && c0.resume){ var rp = c0.resume(); if(rp && rp.catch) rp.catch(function(){}); } } catch(e1){}
-  pixAudioBorn = 0; pixAudioProving = false;          // a new engine is made now, inside this tap
-  var made = pixFreshAudio();
-  try { dbgLog("audio: the sound button was tapped on " + state.screen + " -> " + (made ? "new engine, state " + pixAudioCtx.state : "no new engine") + " [the phone's audio session " + pixSessionState() + "]"); } catch(e2){}
-  if(!made) pixAudioStale = true;
-  else if(pixReviveQueue.length){ var q = pixReviveQueue; pixReviveQueue = []; q.forEach(function(job){ job(); }); }
+  var type = e ? e.type : "?";
+  if(e){ if(e.preventDefault && type !== "pointerdown" && type !== "touchstart") e.preventDefault(); if(e.stopPropagation) e.stopPropagation(); }
+  var now = performance.now(), first = now - pixPillAt > 700;
+  if(type === "pointerdown" || type === "touchstart"){ try { if(pixPillEl) pixPillEl.classList.add("soundPillDown"); } catch(e0){} return; }
+  var made = false;
+  if(first){
+    pixPillAt = now;
+    try { if(pixPillEl){ pixPillEl.classList.remove("soundPillDown"); pixPillEl.classList.add("soundPillBusy"); pixPillEl.textContent = (state.lang === "es" ? "AUDIO..." : "SOUND..."); setTimeout(function(){ try { if(pixPillEl){ pixPillEl.classList.remove("soundPillBusy"); pixPillEl.textContent = "🔇 " + pixSoundPillWords(); } } catch(e5){} }, 1800); } } catch(e4){}
+    pixAudioBorn = 0; pixAudioProving = false;          // a new engine is made now, inside this tap
+    made = pixFreshAudio();
+    if(!made) pixAudioStale = true;
+    else if(pixReviveQueue.length){ var q = pixReviveQueue; pixReviveQueue = []; q.forEach(function(job){ job(); }); }
+  }
+  var c0 = pixAudioCtx; try { if(c0 && c0.resume){ var rp = c0.resume(); if(rp && rp.catch) rp.catch(function(){}); } } catch(e1){}          // every end of a touch wakes the engine again
+  try { dbgLog("audio: the sound button heard " + type + (first ? " (first of the tap: " + (made ? "new engine" : "no new engine") + ")" : "") + " on " + state.screen + ", engine " + (pixAudioCtx ? pixAudioCtx.state : "none") + " [the phone's audio session " + pixSessionState() + "]"); } catch(e2){}
 }
 function pixSoundPillUpdate(){
   try {
@@ -2907,7 +2918,7 @@ function pixSoundPillUpdate(){
     if(want && !pixSoundPillShown()){
       var b = document.createElement("button"); b.id = "soundPill"; b.className = "soundPill"; b.type = "button";
       b.textContent = "🔇 " + pixSoundPillWords();
-      b.addEventListener("touchend", pixSoundPillTap, false); b.addEventListener("click", pixSoundPillTap, false);
+      ["pointerdown", "touchstart", "pointerup", "touchend", "mouseup", "click"].forEach(function(n){ b.addEventListener(n, pixSoundPillTap, false); });
       document.body.appendChild(b); pixPillEl = b;
       dbgLog("audio: the sound button is shown (" + pixAudioFails + " engines in a row never started, screen " + state.screen + ")");
     } else if(!want && pixSoundPillShown()){
@@ -13009,7 +13020,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT24";
+var APP_BUILD = "2026-11-16 IT26";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
