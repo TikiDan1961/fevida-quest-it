@@ -3635,7 +3635,11 @@ function pilgrimEnter(el){
     pixAfterSfx("churchBell", function(){
       pilgrimEntering = false;
       if(el.isConnected) pilgrimBusy(el, false);
-      if(ticketWalkDue() && state.screen === "mainMenu") go("churchWalk");        // inside: up the aisle to the altar, and the Golden Ticket
+      (function goWalk(){          // inside: up the aisle to the altar, and the Golden Ticket (2026-11-16, per Dan: not while the phone is on its side)
+        if(state.screen !== "mainMenu" || !state.pilgrimIn) return;
+        if(rotateMsgShowing()){ setTimeout(goWalk, 300); return; }
+        if(ticketWalkDue()) go("churchWalk");
+      })();
     });
   }, 950);
 }
@@ -3765,6 +3769,7 @@ function pixConfettiParty(){
   } catch(e){}
 }
 function cwFinish(){
+  if(state.screen === "churchWalk" && rotateMsgShowing()){ clearTimeout(cwTimer); cwTimer = setTimeout(cwFinish, 300); return; }          // (2026-11-16, per Dan) not while the phone is on its side
   cwRunning = false; cancelAnimationFrame(cwRaf); clearTimeout(cwTimer); cwConfettiStop();
   if(state.screen !== "churchWalk") return;
   state.tickets = Math.min(2, ticketCount() + 1); state.ticketUnlocked = true; saveState();
@@ -3796,8 +3801,11 @@ function cwStart(){
     el.style.top = ((y - 15 * s) / CW.H * 100) + "%";
   }
   place(0);
+  var cwPausedAt = 0;
   function frame(now){
     if(state.screen !== "churchWalk" || !el.isConnected){ cwRunning = false; return; }
+    if(rotateMsgShowing()){ if(!cwPausedAt) cwPausedAt = now; cwRaf = requestAnimationFrame(frame); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still, no steps, no ticket
+    if(cwPausedAt){ t0 += now - cwPausedAt; cwPausedAt = 0; }
     var p = Math.min(1, (now - t0) / CW.dur);
     place(p);
     if(p < 1) pilgrimStepSfx(now);
@@ -3911,6 +3919,8 @@ function pilgrimWalk(el, target, calm){
     var last = performance.now();
     function step(now){
       if(!el.isConnected) return;      // redrawn: the new drawing picks the walk up from pilgrimPos
+      if(rotateMsgShowing()){ last = now; el.classList.remove("walking"); pilgrimRaf = requestAnimationFrame(step); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still (no steps, no sound) and goes on when it is upright
+      el.classList.add("walking");
       pilgrimStepSfx(now);
       var move = pilgrimSpeed * Math.min(0.1, (now - last) / 1000); last = now;
       if(Math.abs(target - pilgrimPos) <= move){
@@ -4284,6 +4294,7 @@ function pixRoundRun(key, getSession, giveAward, finish){
   if(pixRoundRunning[key]) return;
   var s = getSession();
   if(!s || !s.interlude || state.screen !== key) return;
+  pixRoundsNote(key, s);          // (2026-11-16, per Dan) the finished round is remembered
   pixRoundRunning[key] = true;
   function alive(){ return getSession() === s && s.interlude && state.screen === key; }   // the player has not left
   function done(){
@@ -4329,6 +4340,7 @@ function ffInterlude(){
   if(ffInterludeRunning) return;
   var s = state.session.faithFlash;
   if(!s || !s.interlude || state.screen !== "faithFlash") return;
+  pixRoundsSet("faithFlash", s.index >= s.order.length - 1 ? 0 : s.interlude.n);          // (2026-11-16, per Dan) the finished round is remembered; the last one clears the memory
   ffInterludeRunning = true;
   function alive(){ return state.session.faithFlash === s && s.interlude && state.screen === "faithFlash"; }   // the player has not left
   function finish(){
@@ -6716,12 +6728,13 @@ function sdNextPuzzle(s){
   else {
     var first = s.level === 0;
     s.level++; var nl = s.levels[s.level];
+    pixRoundsSet("sacredSudoku", s.level);          // (2026-11-16, per Dan) the finished puzzle is remembered
     s.cells = nl.puz.slice(); s.hinted = []; s.hints = SD_HINTS; s.sel = sdFirstEmpty(nl.puz); s.busy = false;
     if(first && roundOneGrant("sacredSudoku")) return;      // the first puzzle is round 1 (2026-11-02, per Dan): the badge and 100 points, then "keep playing?"; the second puzzle is already set up
   }
   saveState(); render();
 }
-function sdCollectAward(){ state.session.sacredSudoku = null; grantMission("sacredSudoku"); }
+function sdCollectAward(){ state.session.sacredSudoku = null; pixRoundsSet("sacredSudoku", 0); grantMission("sacredSudoku"); }
 function sdQuit(){ state.session.sacredSudoku = null; go("mainMenu"); }
 
 function sdPicUrl(lv, v){ return 'tiles/faith_tile8_' + ("0" + lv.syms[v - 1]).slice(-2) + '.png'; }
@@ -10971,7 +10984,17 @@ function emMoveSfxWant(){
 function emMoveSfxSet(name){
   var ctx = pixCtx();
   if(name === emMoveName && emMoveCtx === ctx) return;              // (a new audio engine, made after the phone slept, starts it again)
-  if(emMoveSrc){ try { emMoveSrc.stop(); } catch(e){} try { emMoveSrc.disconnect(); if(emMoveGain) emMoveGain.disconnect(); } catch(e){} emMoveSrc = null; emMoveGain = null; }          // (taken out of the audio graph, not just stopped: every landing used to leave a node behind, 2026-11-04)
+  if(emMoveSrc){
+    // (2026-11-16, per Dan: a very fast crack in the running sound) the footsteps fade out over ~25 ms instead of being cut off in the middle of a thump; then they are stopped and taken out of the audio graph (as before, 2026-11-04)
+    var oSrc = emMoveSrc, oGain = emMoveGain, oCtx = emMoveCtx;
+    try {
+      var tNow = oCtx.currentTime;
+      oGain.gain.cancelScheduledValues(tNow); oGain.gain.setValueAtTime(oGain.gain.value, tNow); oGain.gain.linearRampToValueAtTime(0, tNow + 0.025);
+      oSrc.stop(tNow + 0.03);
+    } catch(e){ try { oSrc.stop(); } catch(e2){} }
+    setTimeout(function(){ try { oSrc.disconnect(); if(oGain) oGain.disconnect(); } catch(e3){} }, 120);
+    emMoveSrc = null; emMoveGain = null;
+  }
   emMoveName = ""; emMoveCtx = null;
   if(!name || !ctx) return;
   var buf = pixSfxBuf[name];
@@ -13020,7 +13043,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT27";
+var APP_BUILD = "2026-11-16 IT30";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13952,6 +13975,111 @@ function vpTurnCheck(){
 window.addEventListener("orientationchange", function(){ vpHoldOn(); vpTurnCheck(); vpResyncSoon("turned"); });
 window.addEventListener("resize", function(){ vpTurnCheck(); vpResyncSoon("resized"); });
 if(window.visualViewport){ window.visualViewport.addEventListener("resize", function(){ vpResyncSoon("viewport"); }); window.visualViewport.addEventListener("scroll", function(){ if(Math.abs(window.visualViewport.offsetTop) > 1 || (window.pageYOffset || 0) !== 0) vpResyncSoon("scrolled"); }); }
+
+
+// ---- ROUND MEMORY (2026-11-16, per Dan; see round_memory_fix.py) ----
+var PIX_ROUND_GAMES = {faithFlash:1, faithMatch:1, followLight:1, wordUnscramble:1, catchLight:1, emojiStories:1, jesusTimeline:1, sacredSudoku:1, wordTrail:1, wordGroups:1, mustardSeed:1, prayBeads:1, pilgrimRoad:1, dovePeace:1, fruitsSpirit:1, jacobLadder:1, stainedGlass:1, emmaus:1};
+function pixRoundsDone(id){ var m = state.missions && state.missions[id]; return (m && typeof m.rounds === "number" && m.rounds > 0) ? m.rounds : 0; }
+function pixRoundsSet(id, n){
+  var m = state.missions && state.missions[id];
+  if(!m || !PIX_ROUND_GAMES[id] || (m.rounds || 0) === n) return;
+  m.rounds = n; saveState();
+  try { dbgLog("rounds: " + id + " has " + n + " round(s) finished"); } catch(e){}
+}
+// the ROUND X COMPLETED! screen of a round is up (s = the game, with its interlude): a finished round is remembered; the last one clears the memory (the game is won)
+function pixRoundsNote(id, s){
+  try {
+    if(!PIX_ROUND_GAMES[id] || !s || !s.interlude) return;
+    if(id === "emmaus" && s.test) return;                      // (a test play from the level editor)
+    pixRoundsSet(id, s.interlude.final ? 0 : s.interlude.n);
+  } catch(e){}
+}
+// how many rounds each game has, and the lines that put it into round k (the same set-up its next-round step runs)
+function pixRoundsTotal(id, s){
+  switch(id){
+    case "faithFlash": return FAITH_FLASH_ROUNDS;
+    case "faithMatch": return MATCH_LEVELS.length;
+    case "followLight": return FL_LEVELS.length;
+    case "wordUnscramble": return WU_LEVELS;
+    case "catchLight": return CL_LEVELS.length;
+    case "emojiStories": return EB_ROUNDS;
+    case "jesusTimeline": return s.rounds.length;
+    case "sacredSudoku": return s.levels.length;
+    case "wordTrail": return WT_ROUNDS.length;
+    case "wordGroups": return WG_ROUNDS.length;
+    case "mustardSeed": return MS_ROUNDS.length;
+    case "prayBeads": return PB_ROUNDS.length;
+    case "pilgrimRoad": return PR_ROUNDS.length;
+    case "dovePeace": return DP_ROUNDS.length;
+    case "fruitsSpirit": return FS_ROUNDS_COUNT;
+    case "jacobLadder": return JL_ROUNDS.length;
+    case "stainedGlass": return PZ_LEVELS.length;
+    case "emmaus": return EM_ROUNDS.length;
+  }
+  return 1;
+}
+var PIX_ROUND_JUMP = {
+  faithFlash: function(s, k){ s.index = k * FAITH_FLASH_ROUND_SIZE; s.answered = null; s.answerOrder = s.targets ? ffAnswerOrder(FAITH_FLASH_QUESTIONS[s.order[s.index]], s.targets[s.index]) : shuffle([0,1,2]); },
+  followLight: function(s, k){ flSetupLevel(k); },
+  wordUnscramble: function(s, k){ s.level = k; s.order = wuPickOrder(state.lang || "en", k); s.index = 0; s.hints = WU_HINTS; s.past = []; wuSetupWord(s); },
+  catchLight: function(s, k){ s.level = k; },
+  emojiStories: function(s, k){
+    if(!s.used) s.used = s.order.slice();
+    for(var i = 0; i < k; i++){ var d = ebDrawRound(s.used); s.round = (s.round || 0) + 1; s.order = d.order; s.choices = d.choices; s.used = s.used.concat(d.order); }
+    s.index = 0; s.answered = null; s.past = [];
+  },
+  jesusTimeline: function(s, k){ s.round = k; tlStartRound(s); },
+  sacredSudoku: function(s, k){ s.level = k; var nl = s.levels[k]; s.cells = nl.puz.slice(); s.hinted = []; s.hints = SD_HINTS; s.sel = sdFirstEmpty(nl.puz); s.busy = false; },
+  wordTrail: function(s, k){ state.session.wordTrail = wtNewRound(k); },
+  wordGroups: function(s, k){ state.session.wordGroups = wgNewRound(k); wgDrag = null; },
+  mustardSeed: function(s, k){ state.session.mustardSeed = msNewRound(k); },
+  prayBeads: function(s, k){ s.round = k; pbBeginRound(s); },
+  pilgrimRoad: function(s, k){ s.round = k; prMakeBoard(s); },
+  dovePeace: function(s, k){ s.round = k; s.interlude = null; s.busy = false; dpBegin(s); },
+  fruitsSpirit: function(s, k){ s.round = k; fsStartRound(s); },
+  jacobLadder: function(s, k){ s.round = k; s.busy = false; jlHold = {}; jlBegin(s); },
+  stainedGlass: function(s, k){ s.round = k; s.placed = []; s.status = "playing"; },
+  emmaus: function(s, k){ if(!s.test) s.round = k; }            // (before the screen is first drawn: emFit sets the round up from em.round)
+};
+// the game has just been made (round 1): put it into the round after the finished ones, with a fresh set of chances (2026-11-16, per Dan)
+function pixRoundsApply(id){
+  var k = pixRoundsDone(id); if(!k) return;
+  var s = id === "emmaus" ? em : state.session[id];
+  if(!s || !PIX_ROUND_JUMP[id]) return;
+  k = Math.min(k, pixRoundsTotal(id, s) - 1);
+  if(k < 1) return;
+  try { PIX_ROUND_JUMP[id](s, k); saveState(); dbgLog("rounds: " + id + " starts at round " + (k + 1)); }
+  catch(e){ try { dbgLog("rounds: " + id + " could not start at round " + (k + 1) + " (" + e + "): round 1"); } catch(e2){} }
+}
+(function(){
+  var INITS = {faithFlash:"initFaithFlash", followLight:"initFollowLightRun", wordUnscramble:"initWordUnscramble", catchLight:"initCatchLight", emojiStories:"initEmojiStories", jesusTimeline:"initJesusTimeline",
+    sacredSudoku:"initSacredSudoku", wordTrail:"initWordTrail", wordGroups:"initWordGroups", mustardSeed:"initMustardSeed", prayBeads:"initPrayBeads", pilgrimRoad:"initPilgrimRoad", dovePeace:"initDovePeace",
+    fruitsSpirit:"initFruitsSpirit", jacobLadder:"initJacobLadder", stainedGlass:"initStainedGlass", emmaus:"initEmmaus"};
+  Object.keys(INITS).forEach(function(id){
+    var name = INITS[id], base = window[name];
+    if(typeof base !== "function") return;
+    window[name] = function(){ var r = base.apply(this, arguments); pixRoundsApply(id); return r; };
+  });
+  // Faith Match starts every level through initFaithMatchLevel; a game starts (and TRY AGAIN restarts) it at level 0, and that is the one that moves to the remembered level
+  var fmBase = window.initFaithMatchLevel;
+  if(typeof fmBase === "function") window.initFaithMatchLevel = function(levelIdx){
+    if(levelIdx === 0){ var k = pixRoundsDone("faithMatch"); if(k > 0) levelIdx = Math.min(k, MATCH_LEVELS.length - 1); }
+    return fmBase.call(this, levelIdx);
+  };
+  // CLEAR MISSIONS (the first ticket's prize) and the old CLEAR TICKET start the games over: no round is remembered any more
+  var cmBase = window.clearMissionsGo;
+  if(typeof cmBase === "function") window.clearMissionsGo = function(){
+    var first = (typeof ticketCount === "function") && ticketCount() === 1 && state.tk1Check !== true;
+    var r = cmBase.apply(this, arguments);
+    if(first) Object.keys(PIX_ROUND_GAMES).forEach(function(id){ if(state.missions[id]) state.missions[id].rounds = 0; });
+    saveState(); return r;
+  };
+  var ctBase = window.clearTicket;
+  if(typeof ctBase === "function") window.clearTicket = function(){
+    Object.keys(PIX_ROUND_GAMES).forEach(function(id){ if(state.missions[id]) state.missions[id].rounds = 0; });
+    return ctBase.apply(this, arguments);
+  };
+})();
 
 window.addEventListener("pagehide", saveState);
 window.addEventListener("visibilitychange", saveState);
