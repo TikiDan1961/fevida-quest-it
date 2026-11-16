@@ -87,7 +87,7 @@
   .pixMenuTitle[role="button"]{position:relative;top:20px;cursor:pointer;width:-moz-fit-content;width:fit-content;margin:4px auto 6px;padding:3px 12px 3px;background:#A8DC9C;border-radius:12px;box-shadow:0 0 0 3px #1B1F3B,0 6px 0 3px rgba(27,31,59,.4);-webkit-tap-highlight-color:transparent;}
   .pixMenuTitle[role="button"]:after{content:"i";position:absolute;right:-10px;top:-12px;width:22px;height:22px;border-radius:50%;background:#1B1F3B;color:#FFC93A;box-shadow:0 0 0 2px #A8DC9C;font:700 16px/22px Georgia,"Times New Roman",serif;text-align:center;pointer-events:none;}
   /* (2026-11-09, per Dan) the logo cannot be tapped while the pilgrim talks and walks after a badge, like the icons: it goes grey the same way */
-  .pixMenu.pilgrimBusy .pixMenuTitle[role="button"]{pointer-events:none;filter:grayscale(1);opacity:.55;}
+  .pixMenu.pilgrimBusy .pixMenuTitle[role="button"]{pointer-events:none;filter:grayscale(1) brightness(.72);}
   /* (2026-11-09, per Dan: too much space between the score bar and the icons) the logo and the score bar sit 20 px lower; the icons and everything below stay where they are (top: moves only the thing itself) */
   .pixMenu .progressWrap{position:relative;top:28px;}          /* (2026-11-09, per Dan: just the score bar and its 0 / 500 text 8 px lower than the logo, so 28) */
   /* tapped: the same glow as the app buttons (the pressed look of the icons: it sinks 3 px, and the outline glows, the size --gBlur / --gSpread) */
@@ -302,7 +302,7 @@
   .appIcon.locked .appName{opacity:.75;}
   .appIcon.soon .appTile{filter:grayscale(1);opacity:.55;}
   .appIcon.soon .appName{opacity:.85;}
-  .pixMenu.pilgrimBusy .homeGrid .appIcon{filter:grayscale(1);opacity:.55;}
+  .pixMenu.pilgrimBusy .homeGrid .appIcon{filter:grayscale(1) brightness(.72);}
   /* Hope Garden (2026-10-26, per Dan): the garden is a canvas drawn at 3 x 3 screen pixels to the picture pixel (sized in hgFit); no buttons under it */
   .hgArea{width:min(100%,380px);margin:0 auto;}
   .hgStage{position:relative;overflow:hidden;box-sizing:border-box;height:clamp(260px,calc(100vh - 262px),640px);height:clamp(260px,calc(100dvh - 262px),640px);display:flex;align-items:center;justify-content:center;border:4px solid #FFC93A;border-radius:16px;
@@ -486,7 +486,7 @@
   }
   .hgiFoot{display:flex;align-items:center;gap:8px;margin-top:2px;font-weight:700;font-size:.95rem;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.45);}
   .pixHome.pixSky > .hgMenuIcon{position:absolute;z-index:6;visibility:hidden;left:0;top:300px;margin:0;}
-  .pixMenu.pilgrimBusy .hgMenuIcon{filter:grayscale(1);opacity:.55;pointer-events:none;}
+  .pixMenu.pilgrimBusy .hgMenuIcon{filter:grayscale(1) brightness(.72);pointer-events:none;}
 
   .appIcon.done .appTile{filter:saturate(.65);}
   .pixHome.pixSky > .folderOverlay{position:fixed;left:0;top:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;
@@ -13020,7 +13020,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT26";
+var APP_BUILD = "2026-11-16 IT27";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
