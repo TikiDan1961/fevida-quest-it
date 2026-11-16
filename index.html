@@ -3136,11 +3136,21 @@ function screenLanguage(){
 
 // Welcome screen (2026-10-19, per Dan): pixel-art church interior (tiles/church_interior.png)
 // -- the welcome card on the wall above the altar, the buttons over the pews.
+// (2026-11-15, per Dan) the player is coming back to a game in progress: something is already earned on this phone
+function questInProgress(){
+  try {
+    if((state.points || 0) > 0 || (state.pilgrimSteps || 0) > 0 || state.pilgrimIn || (state.pilgrimP || 0) > 0 || (state.tickets || 0) > 0 || state.ticketUnlocked === true) return true;
+    for(var id in state.missions){ var m = state.missions[id]; if(m && (m.done || m.badge)) return true; }
+  } catch(e){}
+  return false;
+}
+function continueQuestWords(){ return state.lang === "es" ? "CONTINUA LA TUA AVVENTURA" : "CONTINUE YOUR QUEST"; }
 function screenWelcome(){
   // The buttons are exactly the language screen's size and spot: same 78%-of-the-card-width button,
   // same card-width dock at the bottom. Their words are longer than ENGLISH / ESPAÑOL, so the
   // type is smaller when the longer label (Spanish) needs it to fit on one line.
-  var fit = Math.max(t("startQuest").length, t("changeLanguage").length) > 16 ? "pixBtnSm" : "pixBtnMd";
+  var questWords = questInProgress() ? continueQuestWords() : t("startQuest");
+  var fit = Math.max(questWords.length, t("changeLanguage").length) > 16 ? "pixBtnSm" : "pixBtnMd";
   return '<div class="screen pixHome pixChurch">' +
     '<div class="pixCard pixWelcomeCard">' +
       '<h1 class="pixWelTitle">' + t("welcomeTitle") + '</h1>' +
@@ -3148,7 +3158,7 @@ function screenWelcome(){
     '</div>' +
     '<div class="spacer"></div>' +
     '<div class="pixBtnDock">' +
-      '<button class="btn pixBtn ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();go(\'mainMenu\')">' + t("startQuest") + '</button>' +
+      '<button class="btn pixBtn ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();go(\'mainMenu\')">' + questWords + '</button>' +
       '<button class="btn pixBtn secondary ' + fit + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();go(\'language\')">' + t("changeLanguage") + '</button>' +
       instBtnHtml(fit) +
       shareBtnHtml("app", null, "welcome", t("shareAppBtn"), fit) +          // SHARE THE APP, last (2026-11-06, per Dan)
@@ -12964,7 +12974,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-15 IT21";
+var APP_BUILD = "2026-11-15 IT22";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
