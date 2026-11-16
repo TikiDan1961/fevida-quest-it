@@ -146,7 +146,10 @@
   /* (2026-11-09, per Dan's second iPhone test: "it works but it's not pretty": a blue bar at the bottom, a flash and a jump when the phone is turned back.) For a moment after the phone comes back upright a cover of the Rotate message's colour stays over the page, and fades away once the page has been put right, so the correction is not seen. */
   #vpCover{position:fixed;left:-80px;top:-80px;right:-80px;bottom:-80px;background:#1D2350;opacity:0;pointer-events:none;z-index:99998;transition:opacity .35s ease-out;}
   html.vpHold #vpCover{opacity:1;transition:none;pointer-events:auto;}          /* (2026-11-15, per Dan) the cover takes the touch: nothing behind it can be started while it hides the game */
-  html.vpFix #app{height:var(--appH);}          /* (only while the numbers disagree: the class is put on by vpResync) */
+  html.vpFix #app{height:var(--appH);}
+  /* (2026-11-16, per Dan's log) the button that wakes the sound when no swipe can: see sound_pill_fix.py */
+  .soundPill{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);z-index:99000;padding:10px 16px;border:3px solid #0D1030;border-radius:12px;background:#FFC93A;color:#0D1030;
+    font:700 15px "Jersey 10","Pixelify Sans",ui-monospace,monospace;letter-spacing:.04em;box-shadow:0 3px 0 #0D1030;max-width:calc(100vw - 24px);white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}          /* (only while the numbers disagree: the class is put on by vpResync) */
   .screen{
     flex:1;
     display:flex;
@@ -2872,16 +2875,48 @@ function pixFreshAudio(){
         if(c !== pixAudioCtx || proved) return;
         var el = performance.now() - born, moving = (c.currentTime - t0) * 1000 > Math.max(50, el * .25);
         dbgLog("audio: " + Math.round(el) + " ms after the new engine: state " + c.state + ", clock " + (moving ? "moving" : "NOT moving") + ", the phone's audio session " + pixSessionState());
-        if(moving){ proved = true; pixAudioProving = false; pixAudioFails = 0; pixAudioStale = false; return; }
+        if(moving){ proved = true; pixAudioProving = false; pixAudioFails = 0; pixAudioStale = false; pixSoundPillUpdate(); return; }
         if(k === 2){                                                // 1.5 s and the clock still has not started: a dead engine, the next tap makes another
           pixAudioProving = false; pixAudioFails++; pixAudioStale = true;
-          if(pixAudioFails >= 3) pixAudioGiveUp();
+          pixSoundPillUpdate();
+          if(pixAudioFails >= 3 && !pixSoundPillShown()) pixAudioGiveUp();          // (2026-11-16) with the sound button showing the page is not reloaded: the tap on the button is the cure, the reload never was
         }
       }, ms);
     });
     return true;
   } catch(e){ return false; }
 }
+// ---- TAP TO TURN THE SOUND BACK ON (2026-11-16, per Dan's log; see sound_pill_fix.py) ----
+var pixPillEl = null, pixPillAt = 0;
+function pixSoundPillShown(){ return !!(pixPillEl && pixPillEl.parentNode); }
+function pixSoundPillWords(){ return state.lang === "es" ? "TOCCA PER RIATTIVARE L\u2019AUDIO" : "TAP TO TURN THE SOUND BACK ON"; }
+function pixSoundPillTap(e){
+  if(e){ if(e.preventDefault) e.preventDefault(); if(e.stopPropagation) e.stopPropagation(); }
+  var now = performance.now(); if(now - pixPillAt < 700) return;          // (a touch makes a touchend and may make a click: one engine for the tap)
+  pixPillAt = now;
+  var c0 = pixAudioCtx; try { if(c0 && c0.resume){ var rp = c0.resume(); if(rp && rp.catch) rp.catch(function(){}); } } catch(e1){}
+  pixAudioBorn = 0; pixAudioProving = false;          // a new engine is made now, inside this tap
+  var made = pixFreshAudio();
+  try { dbgLog("audio: the sound button was tapped on " + state.screen + " -> " + (made ? "new engine, state " + pixAudioCtx.state : "no new engine") + " [the phone's audio session " + pixSessionState() + "]"); } catch(e2){}
+  if(!made) pixAudioStale = true;
+  else if(pixReviveQueue.length){ var q = pixReviveQueue; pixReviveQueue = []; q.forEach(function(job){ job(); }); }
+}
+function pixSoundPillUpdate(){
+  try {
+    var want = pixAudioFails >= 2 && !document.hidden && !!state.lang;
+    if(want && !pixSoundPillShown()){
+      var b = document.createElement("button"); b.id = "soundPill"; b.className = "soundPill"; b.type = "button";
+      b.textContent = "🔇 " + pixSoundPillWords();
+      b.addEventListener("touchend", pixSoundPillTap, false); b.addEventListener("click", pixSoundPillTap, false);
+      document.body.appendChild(b); pixPillEl = b;
+      dbgLog("audio: the sound button is shown (" + pixAudioFails + " engines in a row never started, screen " + state.screen + ")");
+    } else if(!want && pixSoundPillShown()){
+      pixPillEl.parentNode.removeChild(pixPillEl); pixPillEl = null;
+      dbgLog("audio: the sound button is gone (" + (document.hidden ? "page hidden" : "the sound runs") + ")");
+    }
+  } catch(e){}
+}
+document.addEventListener("visibilitychange", function(){ pixSoundPillUpdate(); });
 document.addEventListener("visibilitychange", pixMarkAudioStale);
 document.addEventListener("visibilitychange", function(){
   var c = pixAudioCtx; if(!c) return;
@@ -12974,7 +13009,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-15 IT22";
+var APP_BUILD = "2026-11-16 IT24";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -12987,7 +13022,7 @@ function screenOptions(){
       optionRow("sfx", t("sfxVolume"), typeof state.volSfx === "number" ? state.volSfx : 45) +
       optionRow("music", t("musicVolume"), typeof state.volMusic === "number" ? state.volMusic : 60) +
     '</div>' +
-    (clearMissionsDue() ? '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();clearMissionsAsk()">' + t("clearMissions") + '</button></div>' : '') +
+    (clearMissionsDue() ? '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();clearMissionsAsk()">' + clearMissionsLabel() + '</button></div>' : '') +
     '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();resetAllAsk()">RESET</button></div>' +
     '<div class="shareRow optShare">' + shareBtnHtml("app", null, "options", t("shareAppBtn"), t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '</div>' +
     (instCanShow() ? '<div class="optInstall">' + instBtnHtml() + '</div>' : '') +
@@ -13789,6 +13824,11 @@ function ticketWalkDue(){ var n = ticketCount(); return n === 0 || (n === 1 && s
 function cwTicketNum(){ return ticketCount() === 0 ? 1 : 2; }
 function ticketPicN(n){ return "tiles/golden_ticket_" + (n === 2 ? "2" : "1") + (state.lang === "es" ? "_es" : "") + ".png"; }
 // the CLEAR MISSIONS button of the Options screen is there while a won ticket's prize has not been handed over
+function clearMissionsLabel(){          // (2026-11-16, per Dan) the first ticket's prize is handed over with GOLDEN TICKET ONE, the second's with GOLDEN TICKET TWO
+  var two = ticketCount() >= 2;
+  if(state.lang === "es") return two ? "BIGLIETTO D\u2019ORO DUE" : "BIGLIETTO D\u2019ORO UNO";
+  return two ? "GOLDEN TICKET TWO" : "GOLDEN TICKET ONE";
+}
 function clearMissionsDue(){ var n = ticketCount(); return (n === 1 && state.tk1Check !== true) || (n >= 2 && state.tk2Check !== true); }
 function clearMissionsAsk(){
   if(document.getElementById("clearAskOverlay")) return;
