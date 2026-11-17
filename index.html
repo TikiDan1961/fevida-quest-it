@@ -2656,7 +2656,18 @@ function pixSfxDecode(name, whenReady){
     w.forEach(function(fn){ fn(buf); });
   }, function(){ pixSfxDecoding[name] = false; pixSfxWaiters[name] = []; });
 }
-function pixSfxDecodeAll(){ Object.keys(PIX_SFX).forEach(function(k){ pixSfxDecode(k); }); pixMusicDecode(); }
+var pixDecodeAllFrom = 0, pixDecodeAllTimer = 0;
+function pixSfxDecodeAll(){
+  // (2026-11-16, per Dan's log of a blank Main Menu) the first tap decodes only the button sound at once; the rest 1.5 s later (a sound asked for earlier is decoded when it is asked for)
+  var nowD = performance.now();
+  if(!pixDecodeAllFrom) pixDecodeAllFrom = nowD + 1500;
+  if(nowD < pixDecodeAllFrom){
+    pixSfxDecode("tap");
+    if(!pixDecodeAllTimer) pixDecodeAllTimer = setTimeout(function(){ pixDecodeAllTimer = 0; pixSfxDecodeAll(); }, pixDecodeAllFrom - nowD + 30);
+    return;
+  }
+  Object.keys(PIX_SFX).forEach(function(k){ pixSfxDecode(k); }); pixMusicDecode();
+}
 
 // ---- the music track (2026-10-20, per Dan) ----
 // sounds/music_loop.wav is music_track.wav (a seamless loop) at half the sample rate, so it is 4 MB instead of 16. It stays an uncompressed WAV
@@ -2675,6 +2686,10 @@ function pixMusicFetch(done){
 }
 function pixMusicDecode(){
   if(pixMusic.buf || pixMusic.decoding || !pixMusic.bytes) return;
+  // (2026-11-16, per Dan's log of a blank Main Menu) not while the first Main Menu is being drawn: 2.5 s after the music is first asked for
+  var nowM = performance.now();
+  if(!pixMusic.holdUntil) pixMusic.holdUntil = nowM + 2500;
+  if(nowM < pixMusic.holdUntil){ if(!pixMusic.holdTimer) pixMusic.holdTimer = setTimeout(function(){ pixMusic.holdTimer = 0; pixMusicDecode(); }, pixMusic.holdUntil - nowM + 30); return; }
   var ctx = pixCtx(); if(!ctx) return;
   pixMusic.decoding = true;
   ctx.decodeAudioData(pixMusic.bytes.slice(0), function(buf){
@@ -13043,7 +13058,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT31";
+var APP_BUILD = "2026-11-16 IT32";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
