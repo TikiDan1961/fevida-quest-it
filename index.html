@@ -4065,6 +4065,7 @@ function grantMission(id, missionState){
     return;
   }
   state.missions[id].done = true;
+  if(state.pendingBadge === id) state.pendingBadge = null;          // (2026-11-16, per Dan) the round 1 badge has been given
   if(missionIsGame(id)) state.pilgrimOwed = true;
   var gm = missionById(id);
   state.missions[id].badge = !(gm && gm.noBadge);
@@ -4355,7 +4356,7 @@ function ffInterlude(){
   if(ffInterludeRunning) return;
   var s = state.session.faithFlash;
   if(!s || !s.interlude || state.screen !== "faithFlash") return;
-  pixRoundsSet("faithFlash", s.index >= s.order.length - 1 ? 0 : s.interlude.n);          // (2026-11-16, per Dan) the finished round is remembered; the last one clears the memory
+  pixRoundsSet("faithFlash", s.index >= s.order.length - 1 ? 0 : s.interlude.n); pixBadgeOwed("faithFlash", s.interlude);          // (2026-11-16, per Dan) the finished round is remembered (the last one clears the memory); a round 1 badge still owed is remembered too
   ffInterludeRunning = true;
   function alive(){ return state.session.faithFlash === s && s.interlude && state.screen === "faithFlash"; }   // the player has not left
   function finish(){
@@ -13058,7 +13059,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT32";
+var APP_BUILD = "2026-11-16 IT33";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13641,6 +13642,7 @@ function renderApply(html){
   if(state.screen === "mainMenu"){
     // the pilgrim and the pets wait until the How It Works window has been closed (2026-11-01, per Dan); closing it starts them as on a fresh Main Menu
     if(state.howSeen){ pilgrimInit(isNewScreen || howJustClosed); howJustClosed = false; }
+    if(state.pendingBadge) pixPendingBadgeSoon();          // (2026-11-16, per Dan) a round 1 badge that never came is given now
     pixMusicStart();                                                                  // the music starts the first time the Main Menu is shown
   }
   else if(state.screen !== "language" && state.screen !== "welcome") pixMusicStart();      // ...and on any other screen after that: a phone that slept can reload the page on the Unfinished screen or in a game, and the music has to come back there too (2026-10-28, per Dan)
@@ -14008,7 +14010,34 @@ function pixRoundsNote(id, s){
     if(!PIX_ROUND_GAMES[id] || !s || !s.interlude) return;
     if(id === "emmaus" && s.test) return;                      // (a test play from the level editor)
     pixRoundsSet(id, s.interlude.final ? 0 : s.interlude.n);
+    pixBadgeOwed(id, s.interlude);
   } catch(e){}
+}
+// ---- the round 1 badge is never lost (2026-11-16, per Dan: he finished Faith Flash, saw ROUND 1 COMPLETED, switched to the Messages app, came back to the Main Menu and never saw the badge screen) ----
+// The badge and the 100 points are given when the ROUND 1 COMPLETED! message ends (roundOneGrant). If the phone drops the app while the message is up (a cold start forgets the game under way), the grant never came, yet
+// round 1 was finished and (with the round memory) remembered. So when the message comes up, state.pendingBadge says which game's badge is owed; grantMission clears it; and the first Main Menu that is shown while one
+// is still owed gives the badge and shows the badge screen, as it would have.
+function pixBadgeOwed(id, il){
+  try {
+    if(id === "hopeGarden" || !il || il.n !== 1 || il.final || il.resumed) return;
+    if(typeof missionIsGame !== "function" || !missionIsGame(id) || !state.missions[id] || state.missions[id].done) return;
+    if(state.pendingBadge !== id){ state.pendingBadge = id; saveState(); }
+  } catch(e){}
+}
+var pixPendingTimer = 0;
+function pixPendingBadgeSoon(){
+  if(pixPendingTimer) return;
+  pixPendingTimer = setTimeout(function(){
+    pixPendingTimer = 0;
+    var id = state.pendingBadge; if(!id) return;
+    if(state.screen !== "mainMenu" || state.awardMissionId) return;
+    var m = state.missions[id];
+    state.pendingBadge = null;
+    if(!m || m.done){ saveState(); return; }
+    try { dbgLog("badge: " + id + " round 1 was finished but its badge never came: given now"); } catch(e){}
+    state.contFor = id;                     // (after round 1: the Keep Going screen follows, which goes to the Main Menu when the game itself is gone)
+    grantMission(id);
+  }, 700);
 }
 // how many rounds each game has, and the lines that put it into round k (the same set-up its next-round step runs)
 function pixRoundsTotal(id, s){
@@ -14094,6 +14123,7 @@ function pixRoundsApply(id){
     var first = (typeof ticketCount === "function") && ticketCount() === 1 && state.tk1Check !== true;
     var r = cmBase.apply(this, arguments);
     if(first) Object.keys(PIX_ROUND_GAMES).forEach(function(id){ if(state.missions[id]) state.missions[id].rounds = 0; });
+    if(first) state.pendingBadge = null;
     saveState(); return r;
   };
   var ctBase = window.clearTicket;
