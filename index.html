@@ -2626,7 +2626,7 @@ function pixSfxFetchOne(k, done){
   pixSfxFetching[k] = true;
   fetch(PIX_SFX[k].url, {priority: done ? "low" : "high"}).then(function(r){ return r.arrayBuffer(); }).then(function(ab){
     pixSfxBytes[k] = ab;
-    if(pixAudioCtx) pixSfxDecode(k); else if(k === "tap") pixSfxPreDecode(k);          // (the engine does not exist before the first touch: the button sound is decoded without it)
+    if(pixAudioCtx && (k === "tap" || pixDecodeAllFrom)) pixSfxDecode(k); else if(k === "tap") pixSfxPreDecode(k);          // (2026-11-16) the engine exists early: the other sounds wait for the first tap, then for the delayed pass (pixSfxDecodeAll)          // (the engine does not exist before the first touch: the button sound is decoded without it)
     if(done) done();
   }).catch(function(){ pixSfxFetching[k] = false; if(done) done(); });
 }
@@ -2680,7 +2680,7 @@ function pixMusicFetch(done){
   pixMusic.fetching = true;
   fetch(PIX_MUSIC_URL, {priority: "low"}).then(function(r){ return r.arrayBuffer(); }).then(function(ab){
     pixMusic.bytes = ab;
-    if(pixAudioCtx) pixMusicDecode();
+    if(pixAudioCtx && pixDecodeAllFrom) pixMusicDecode();
     if(done) done();
   }).catch(function(){ pixMusic.fetching = false; if(done) done(); });
 }
@@ -2809,7 +2809,7 @@ try {
 function pixWatchEngine(c){
   try {
     c.addEventListener("statechange", function(){
-      dbgLog("audio: engine " + (c === pixAudioCtx ? "(current)" : "(an old one)") + " is now " + c.state + " (screen " + state.screen + ", " + pixAudioDiag() + ")");
+      dbgLog("audio: engine " + (c === pixAudioCtx ? "(current)" : "(an old one)") + " is now " + c.state + (c.state === "running" && window.pixFirstTouchAt && !window.pixFirstRunLogged ? (window.pixFirstRunLogged = true, ", " + Math.round(performance.now() - window.pixFirstTouchAt) + " ms after the first touch") : "") + " (screen " + state.screen + ", " + pixAudioDiag() + ")");
       if(c === pixAudioCtx && c.state !== "running" && !document.hidden) pixMarkAudioStale();
     });
   } catch(e){}
@@ -3200,8 +3200,8 @@ function screenLanguage(){
 // (2026-11-15, per Dan) the player is coming back to a game in progress: something is already earned on this phone
 function questInProgress(){
   try {
-    if((state.points || 0) > 0 || (state.pilgrimSteps || 0) > 0 || state.pilgrimIn || (state.pilgrimP || 0) > 0 || (state.tickets || 0) > 0 || state.ticketUnlocked === true) return true;
-    for(var id in state.missions){ var m = state.missions[id]; if(m && (m.done || m.badge)) return true; }
+    if((state.points || 0) > 0 || (state.pilgrimSteps || 0) > 0 || state.pilgrimIn || (state.pilgrimP || 0) > 0 || (state.tickets || 0) > 0 || state.ticketUnlocked === true || !!state.pendingBadge) return true;          // (a round 1 badge that is still owed shows its badge screen at the Main Menu, 2026-11-16, per Dan)
+    for(var id in state.missions){ var m = state.missions[id]; if(m && (m.done || m.badge || m.rounds > 0)) return true; }          // (a finished round counts too: the game starts at the next one, 2026-11-16)
   } catch(e){}
   return false;
 }
@@ -13059,7 +13059,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT33";
+var APP_BUILD = "2026-11-16 IT35";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13630,7 +13630,7 @@ function renderApply(html){
   if(badgeNow && !pxBadgeShown) pixConfettiParty();
   pxBadgeShown = badgeNow;
   var soCloseNow = !!app.querySelector("[data-soclose]");          // (2026-11-10, per Dan: sound_effect_8 when a SO CLOSE! window is displayed)
-  if(soCloseNow && !pxSoCloseShown && !(performance.now() - (window.pixFmLastAt || -99999) < 3000)) pixSfxPlay("fmLast", true);
+  // (2026-11-16, per Dan) a SO CLOSE! window makes no sound of its own: the sound of the last chance is played by the game when it is lost, and playing it again here doubled it
   pxSoCloseShown = soCloseNow;
   if(state.screen === "award" && pxConfettiCv){ [].forEach.call(app.querySelectorAll(".shareRow"), function(r){ r.classList.add("shareWait"); }); }          // (2026-11-10, per Dan: no SHARE button while the confetti flies)
   if(isNewScreen){
@@ -14133,6 +14133,17 @@ function pixRoundsApply(id){
   };
 })();
 
+// ---- the sound engine is made early (2026-11-16, per Dan: the first button sound after the app loads comes about a second late; see audio_early_engine_fix.py) ----
+window.pixFirstTouchAt = 0;
+document.addEventListener("pointerdown", function(){ if(!window.pixFirstTouchAt) window.pixFirstTouchAt = performance.now(); }, true);
+setTimeout(function(){
+  try {
+    if(pixAudioCtx || document.hidden) return;
+    var t0 = performance.now();
+    pixCtx();
+    dbgLog("audio: the sound engine was made early, before any tap (" + Math.round(performance.now() - t0) + " ms, state " + (pixAudioCtx ? pixAudioCtx.state : "none") + ")");
+  } catch(e){}
+}, 2500);
 window.addEventListener("pagehide", saveState);
 window.addEventListener("visibilitychange", saveState);
 
