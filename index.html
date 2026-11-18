@@ -2810,6 +2810,7 @@ function pixWatchEngine(c){
   try {
     c.addEventListener("statechange", function(){
       dbgLog("audio: engine " + (c === pixAudioCtx ? "(current)" : "(an old one)") + " is now " + c.state + (c.state === "running" && window.pixFirstTouchAt && !window.pixFirstRunLogged ? (window.pixFirstRunLogged = true, ", " + Math.round(performance.now() - window.pixFirstTouchAt) + " ms after the first touch") : "") + " (screen " + state.screen + ", " + pixAudioDiag() + ")");
+      if(c.state === "running") pixNotRunningSince = 0;          // (2026-11-17, per Dan's log) an engine that has run is not judged by an old "not running" note: that replaced it at the next idle tap
       if(c === pixAudioCtx && c.state !== "running" && !document.hidden) pixMarkAudioStale();
     });
   } catch(e){}
@@ -2982,7 +2983,7 @@ function pixReviveOnTap(ev){
   if(endOfTouch && !pixAudioStale){
     if(pixAudioCtx.state !== "running"){
       var ntNow = performance.now();
-      if(!pixNotRunningSince) pixNotRunningSince = ntNow;
+      if(!pixNotRunningSince){ pixNotRunningSince = ntNow; dbgLog("audio: engine " + pixAudioCtx.state + " at the end of a touch on " + state.screen + ": woken, not replaced"); }
       else if(ntNow - pixNotRunningSince > 900){ pixNotRunningSince = 0; pixAudioStale = true; dbgLog("audio: engine still " + pixAudioCtx.state + " after being woken, replacing it (screen " + state.screen + ", " + pixAudioDiag() + ")"); }
     } else pixNotRunningSince = 0;
   }
@@ -13059,7 +13060,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-16 IT35";
+var APP_BUILD = "2026-11-17 IT37";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13906,6 +13907,15 @@ function resetAllGo(){
     for(var i = localStorage.length - 1; i >= 0; i--){ var k = localStorage.key(i); if(k && /QuestState/.test(k)) localStorage.removeItem(k); }
     sessionStorage.clear();
   }catch(e){}
+  // (2026-11-16, per Dan: on a poor connection the first RESET seemed to do nothing, the Main Menu stayed, and a second RESET worked) the reload waits for the connection (up to ~4 s through the service worker), so a cover says it is working
+  try {
+    var ro = document.createElement("div");
+    ro.id = "resetCover";
+    ro.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:#1D2350;color:#FFC93A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;font:700 26px 'Jersey 10','Pixelify Sans',ui-monospace,monospace;letter-spacing:.06em;";
+    ro.innerHTML = '<div>RESETTING...</div><div id="resetCoverSub" style="font-size:16px;color:#BFD0FF"></div>';
+    document.body.appendChild(ro);
+    setTimeout(function(){ var sub = document.getElementById("resetCoverSub"); if(sub) sub.textContent = "waiting for the connection - please wait, do not tap"; }, 4500);
+  } catch(e){}
   location.replace(location.pathname);
 }
 function clearMissionsNo(){ var el = document.getElementById("clearAskOverlay"); if(el && el.parentNode) el.parentNode.removeChild(el); }
