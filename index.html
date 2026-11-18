@@ -3653,7 +3653,7 @@ function pilgrimEnter(el){
       if(el.isConnected) pilgrimBusy(el, false);
       (function goWalk(){          // inside: up the aisle to the altar, and the Golden Ticket (2026-11-16, per Dan: not while the phone is on its side)
         if(state.screen !== "mainMenu" || !state.pilgrimIn) return;
-        if(rotateMsgShowing()){ setTimeout(goWalk, 300); return; }
+        if(pixTurnPaused()){ setTimeout(goWalk, 300); return; }
         if(ticketWalkDue()) go("churchWalk");
       })();
     });
@@ -3784,8 +3784,16 @@ function pixConfettiParty(){
     pxConfettiRaf = requestAnimationFrame(frame);
   } catch(e){}
 }
+// (2026-11-18, per Dan: back in portrait the pilgrim moved and the Golden Ticket came while the purple cover was still up) he stands still while the rotate message is up, while the purple cover of the turn is up
+// (html.vpHold: it stays about a second after the message goes) and while it fades (0.35 s): he starts again only when the screen is really back
+var pixTurnClearAt = 0;
+function pixTurnPaused(){
+  var nowT = performance.now();
+  if(rotateMsgShowing() || document.documentElement.classList.contains("vpHold")){ pixTurnClearAt = nowT + 450; return true; }
+  return nowT < pixTurnClearAt;
+}
 function cwFinish(){
-  if(state.screen === "churchWalk" && rotateMsgShowing()){ clearTimeout(cwTimer); cwTimer = setTimeout(cwFinish, 300); return; }          // (2026-11-16, per Dan) not while the phone is on its side
+  if(state.screen === "churchWalk" && pixTurnPaused()){ clearTimeout(cwTimer); cwTimer = setTimeout(cwFinish, 300); return; }          // (2026-11-16, per Dan) not while the phone is on its side
   cwRunning = false; cancelAnimationFrame(cwRaf); clearTimeout(cwTimer); cwConfettiStop();
   if(state.screen !== "churchWalk") return;
   state.tickets = Math.min(2, ticketCount() + 1); state.ticketUnlocked = true; saveState();
@@ -3820,7 +3828,7 @@ function cwStart(){
   var cwPausedAt = 0;
   function frame(now){
     if(state.screen !== "churchWalk" || !el.isConnected){ cwRunning = false; return; }
-    if(rotateMsgShowing()){ if(!cwPausedAt) cwPausedAt = now; cwRaf = requestAnimationFrame(frame); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still, no steps, no ticket
+    if(pixTurnPaused()){ if(!cwPausedAt) cwPausedAt = now; cwRaf = requestAnimationFrame(frame); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still, no steps, no ticket
     if(cwPausedAt){ t0 += now - cwPausedAt; cwPausedAt = 0; }
     var p = Math.min(1, (now - t0) / CW.dur);
     place(p);
@@ -3935,7 +3943,7 @@ function pilgrimWalk(el, target, calm){
     var last = performance.now();
     function step(now){
       if(!el.isConnected) return;      // redrawn: the new drawing picks the walk up from pilgrimPos
-      if(rotateMsgShowing()){ last = now; el.classList.remove("walking"); pilgrimRaf = requestAnimationFrame(step); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still (no steps, no sound) and goes on when it is upright
+      if(pixTurnPaused()){ last = now; el.classList.remove("walking"); pilgrimRaf = requestAnimationFrame(step); return; }          // (2026-11-16, per Dan) the phone is on its side: he stands still (no steps, no sound) and goes on when it is upright
       el.classList.add("walking");
       pilgrimStepSfx(now);
       var move = pilgrimSpeed * Math.min(0.1, (now - last) / 1000); last = now;
@@ -13060,7 +13068,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-17 IT37";
+var APP_BUILD = "2026-11-18 IT38";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
