@@ -1510,22 +1510,29 @@ function rotGateOpen(){
   var el = document.createElement("div"); el.className = "rotGate"; el.id = "rotGate";
   el.innerHTML = '<div class="rotGateTxt" id="rotGateTxt"></div>'; el.firstChild.textContent = t("dp_ready");
   // (2026-11-18, per Dan) in the same place as the game's own "Tap anywhere to start!": [the stage, how far down it, as a fraction]
-  try {
-    var gp = {catchLight: ["#clField", .5, 0], prayBeads: [".pbStage", .5, 0], jacobLadder: [".jlStage", .5, 0], dovePeace: [".dpStage", .58, 1]}[state.screen];
-    var gs = gp && document.querySelector(gp[0]);
-    if(gs){
-      var gr = gs.getBoundingClientRect(), gt = el.firstChild;
-      gt.style.top = (gr.top + gr.height * gp[1]) + "px"; gt.style.left = gr.left + "px"; gt.style.right = (window.innerWidth - gr.right) + "px";          // (the stage's own width: the message is centred in the stage, as the game's own is)
-      if(gp[2]) gt.style.transform = "none";          // (Dove of Peace puts the top of its message at 58%, the others the middle)
-    }
-  } catch(e){}
+  // The place is worked out again every 100 ms while the gate is up (2026-11-18, per Dan: on the phone the message came up lower than the game's own: the screen was still settling after the turn when it was first placed).
+  var gatePlace = function(){
+    try {
+      var gp = {catchLight: ["#clField", .5, 0], prayBeads: [".pbStage", .5, 0], jacobLadder: [".jlStage", .5, 0], dovePeace: [".dpStage", .58, 1]}[state.screen];
+      var gs = gp && document.querySelector(gp[0]), gt = el.firstChild;
+      if(gs && gt){
+        var gr = gs.getBoundingClientRect();
+        gt.style.top = (gr.top + gr.height * gp[1]) + "px"; gt.style.left = gr.left + "px"; gt.style.right = (window.innerWidth - gr.right) + "px";          // (the stage's own width: the message is centred in the stage, as the game's own is)
+        gt.style.transform = gp[2] ? "none" : "";          // (Dove of Peace puts the top of its message at 58%, the others the middle)
+      }
+    } catch(e){}
+  };
+  gatePlace();
+  var gateLoop = function(){ if(!el.parentNode) return; gatePlace(); (window.pixSt || window.setTimeout)(gateLoop, 100); };
+  (window.pixSt || window.setTimeout)(gateLoop, 100);          // (first run after the gate is in the page)
   document.body.appendChild(el);
   dbgLog("pause: " + state.screen + " waits for a tap, the phone is the right way up");
 }
 function rotGateEnd(tapped){
   if(!rotGate) return;
   rotGate = false; rotGateScreen = null;
-  if(tapped){ rotGateUntil = performance.now() + 450; window.pixRotTapAt = performance.now(); }          // (2026-11-18) when the gate was ended by a tap: Catch the Light's held restart may count that tap as its start (clRestartLevel)
+  if(tapped){ rotGateUntil = performance.now() + 450; window.pixRotTapAt = performance.now();
+    window.pixRotTapMissAt = (state.screen === "catchLight" && typeof clFading !== "undefined" && clFading) ? performance.now() : 0; }          // (2026-11-18) the gate ended by a tap while a miss is fading out: Catch the Light's held restart counts that tap as its start (clRestartLevel)
   var el = document.getElementById("rotGate"); if(el && el.parentNode) el.parentNode.removeChild(el);
   if(!rotHold) document.body.classList.remove("rotPaused");
   dbgLog("pause: " + state.screen + " goes on" + (tapped ? " after the tap" : ""));
@@ -5714,13 +5721,12 @@ function clRestartLevel(){
   s.spawnedInLevel = 0; s.resolvedInLevel = 0; s.caughtInLevel = 0;
   saveState();
   // After a miss the round does not begin by itself (2026-11-05, per Dan): "Tap anywhere to start!" shows, and the first tap starts it (see clGo), as before each new round.
-  clWaiting = true;
-  render();                                     // the render()-hook starts the lights once the screen has been tapped
-  // (2026-11-18, per Dan) a restart that was held while the phone was turned and runs after the tap that ended the gate: that tap is the start, the game does not ask a second time
-  if(window.pixRotTapAt && performance.now() - window.pixRotTapAt < 2500){
-    window.pixRotTapAt = 0;
-    setTimeout(function(){ try { if(clWaiting && state.screen === "catchLight") clGo(null); } catch(e){} }, 80);
-  }
+  // (2026-11-18, per Dan) a restart that was held while the phone was turned (a miss was fading out) and runs after the tap that ended the gate: that tap is the start. The level starts at once with NO second
+  // "Tap anywhere to start!" (it used to come back for about a second, until a second tap). The marker is made by rotGateEnd when the gate ends by a tap while a miss is in flight, and is good for 8 s.
+  var clAuto = !!(window.pixRotTapMissAt && performance.now() - window.pixRotTapMissAt < 8000);
+  window.pixRotTapMissAt = 0;
+  clWaiting = !clAuto;
+  render();                                     // the render()-hook starts the lights once the screen has been tapped (or at once when the gate's tap was the start)
 }
 
 // Runs every CL_TICK_MS while a round is live — the only way to detect a
@@ -13088,7 +13094,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-18 IT42";
+var APP_BUILD = "2026-11-18 IT43";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
