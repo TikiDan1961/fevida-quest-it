@@ -345,7 +345,10 @@
   .rotateMsg{display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;box-sizing:border-box;padding:12px 24px;background:#1D2350;color:#fff;text-align:center;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;}
   @media (orientation:landscape){ .rotateMsg{justify-content:center;padding-top:12px;} .rotateSub:empty{display:none;} }          /* (2026-11-10, per Dan: centered top to bottom on its side, the little phone and the words as one group (the empty line under them takes no room); it was from the top, 72 px down) */      /* (2026-11-06, per Dan: turned while the hands were being moved, the phone showed only the little phone, at the very bottom: the box was still as tall as the upright screen for a moment, so what is centred in it fell off the bottom. From the top, it is always on the screen. Upright, it is still centred.) */
-  .rotGate{position:fixed;left:0;top:0;right:0;bottom:0;z-index:99990;box-sizing:border-box;padding:24px;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(10,16,48,.5);font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;font-size:1.9rem;line-height:1.1;color:#fff;text-shadow:2px 2px 0 #0D1030;-webkit-user-select:none;user-select:none;touch-action:none;}
+  .rotGate{position:fixed;left:0;top:0;right:0;bottom:0;z-index:99990;box-sizing:border-box;background:transparent;-webkit-user-select:none;user-select:none;touch-action:none;}
+  /* (2026-11-18, per Dan) the same look as the round-start message .dpReady: font, size, colour and outline */
+  .rotGate .rotGateTxt{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;font-family:"Jersey 10","Pixelify Sans",ui-monospace,monospace;font-weight:700;font-size:1.2rem;color:#fff;
+    text-shadow:2px 0 #1b2a6b,-2px 0 #1b2a6b,0 2px #1b2a6b,0 -2px #1b2a6b,2px 2px #1b2a6b,-2px -2px #1b2a6b,2px -2px #1b2a6b,-2px 2px #1b2a6b;}
   .rotateText{font-size:1.75rem;line-height:1.1;letter-spacing:.06em;color:#FFC93A;text-shadow:3px 3px 0 #0D1030;}
   .rotateSub{font-size:1.125rem;line-height:1.1;letter-spacing:.05em;color:#BFD0FF;}
   .rotatePhone{position:relative;width:34px;height:56px;box-sizing:border-box;border:4px solid #fff;border-radius:8px;background:#3A8FE8;box-shadow:0 0 0 3px #0D1030;animation:rotateHint 2.4s ease-in-out infinite;}
@@ -1504,13 +1507,25 @@ function rotGateOpen(){
   pixPauseAnims(); document.body.classList.add("rotPaused");
   rotLetGo();
   try { if(typeof emMoveSfxSet === "function") emMoveSfxSet(""); if(typeof hglDangerSfx === "function") hglDangerSfx(false); } catch(e){}
-  var el = document.createElement("div"); el.className = "rotGate"; el.id = "rotGate"; el.textContent = t("dp_ready"); document.body.appendChild(el);
+  var el = document.createElement("div"); el.className = "rotGate"; el.id = "rotGate";
+  el.innerHTML = '<div class="rotGateTxt" id="rotGateTxt"></div>'; el.firstChild.textContent = t("dp_ready");
+  // (2026-11-18, per Dan) in the same place as the game's own "Tap anywhere to start!": [the stage, how far down it, as a fraction]
+  try {
+    var gp = {catchLight: ["#clField", .5, 0], prayBeads: [".pbStage", .5, 0], jacobLadder: [".jlStage", .5, 0], dovePeace: [".dpStage", .58, 1]}[state.screen];
+    var gs = gp && document.querySelector(gp[0]);
+    if(gs){
+      var gr = gs.getBoundingClientRect(), gt = el.firstChild;
+      gt.style.top = (gr.top + gr.height * gp[1]) + "px"; gt.style.left = gr.left + "px"; gt.style.right = (window.innerWidth - gr.right) + "px";          // (the stage's own width: the message is centred in the stage, as the game's own is)
+      if(gp[2]) gt.style.transform = "none";          // (Dove of Peace puts the top of its message at 58%, the others the middle)
+    }
+  } catch(e){}
+  document.body.appendChild(el);
   dbgLog("pause: " + state.screen + " waits for a tap, the phone is the right way up");
 }
 function rotGateEnd(tapped){
   if(!rotGate) return;
   rotGate = false; rotGateScreen = null;
-  if(tapped) rotGateUntil = performance.now() + 450;
+  if(tapped){ rotGateUntil = performance.now() + 450; window.pixRotTapAt = performance.now(); }          // (2026-11-18) when the gate was ended by a tap: Catch the Light's held restart may count that tap as its start (clRestartLevel)
   var el = document.getElementById("rotGate"); if(el && el.parentNode) el.parentNode.removeChild(el);
   if(!rotHold) document.body.classList.remove("rotPaused");
   dbgLog("pause: " + state.screen + " goes on" + (tapped ? " after the tap" : ""));
@@ -5701,6 +5716,11 @@ function clRestartLevel(){
   // After a miss the round does not begin by itself (2026-11-05, per Dan): "Tap anywhere to start!" shows, and the first tap starts it (see clGo), as before each new round.
   clWaiting = true;
   render();                                     // the render()-hook starts the lights once the screen has been tapped
+  // (2026-11-18, per Dan) a restart that was held while the phone was turned and runs after the tap that ended the gate: that tap is the start, the game does not ask a second time
+  if(window.pixRotTapAt && performance.now() - window.pixRotTapAt < 2500){
+    window.pixRotTapAt = 0;
+    setTimeout(function(){ try { if(clWaiting && state.screen === "catchLight") clGo(null); } catch(e){} }, 80);
+  }
 }
 
 // Runs every CL_TICK_MS while a round is live — the only way to detect a
@@ -13068,7 +13088,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-18 IT40";
+var APP_BUILD = "2026-11-18 IT42";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
