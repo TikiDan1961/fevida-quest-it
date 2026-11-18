@@ -1464,6 +1464,7 @@ function pixPaused(){ return quitAsk || rotHold || rotGate; }
 var PAUSE_ON_ROTATE = ["faithFlash","faithMatch","beTheLight","followLight","wordUnscramble","catchLight","kindnessSort","hiddenBlessings","stainedGlass","lightCandle","emojiStories","jesusTimeline","sacredSudoku","wordTrail","wordGroups","mustardSeed","prayBeads","pilgrimRoad","dovePeace","fruitsSpirit","jacobLadder","mainMenu"];      // (mainMenu, 2026-11-06, per Dan: the pilgrim does not walk on while the phone is on its side)
 var pixPausedAnims = [];
 function pixPauseAnims(){          // the lights, plants and beads that move on el.animate() (not the CSS ones: body.quitPaused / body.rotPaused stop those)
+  if(!window.pixPauseStartAt) window.pixPauseStartAt = Date.now();          // (2026-11-18) when this pause began: the clouds' clock stands still for it (see pixPauseRelease)
   try {
     var app = document.getElementById("app");
     document.getAnimations().forEach(function(a){
@@ -1474,6 +1475,7 @@ function pixPauseAnims(){          // the lights, plants and beads that move on 
 }
 function pixPauseRelease(){        // lets what was held back go on, once nothing holds the game any more
   if(quitAsk || rotHold || rotGate) return;
+  if(window.pixPauseStartAt){ CLOUD_T0 += Date.now() - window.pixPauseStartAt; window.pixPauseStartAt = 0; }          // (2026-11-18, per Dan) the clouds do not jump forward by the length of the pause at the next redraw
   pixPausedAnims.forEach(function(a){ try { a.play(); } catch(e){} }); pixPausedAnims = [];
   var rq = quitRafQ, tq = quitTimerQ; quitRafQ = []; quitTimerQ = [];
   rq.forEach(function(q){ requestAnimationFrame(q.cb); });
@@ -5725,8 +5727,17 @@ function clRestartLevel(){
   // "Tap anywhere to start!" (it used to come back for about a second, until a second tap). The marker is made by rotGateEnd when the gate ends by a tap while a miss is in flight, and is good for 8 s.
   var clAuto = !!(window.pixRotTapMissAt && performance.now() - window.pixRotTapMissAt < 8000);
   window.pixRotTapMissAt = 0;
-  clWaiting = !clAuto;
-  render();                                     // the render()-hook starts the lights once the screen has been tapped (or at once when the gate's tap was the start)
+  if(clAuto){
+    // (2026-11-18, per Dan: after the tap the hands snapped to the middle, the clouds jumped and other stars sparkled) the level starts WITHOUT redrawing the screen: a redraw makes new clouds and twinkles and puts the hands in the
+    // middle for the prompt, which is hidden when the prompt shows but seen when the lights are already falling. The hands stay where the player had them.
+    clWaiting = false;
+    var clKeepX = clHandX;
+    clStart();
+    if(typeof clKeepX === "number"){ clHandX = clKeepX; try { clUpdateHandPosition(); } catch(e){} }
+    return;
+  }
+  clWaiting = true;
+  render();                                     // the render()-hook starts the lights once the screen has been tapped
 }
 
 // Runs every CL_TICK_MS while a round is live — the only way to detect a
@@ -13094,7 +13105,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-18 IT43";
+var APP_BUILD = "2026-11-18 IT45";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
