@@ -3274,6 +3274,7 @@ function openMission(id){
   track("mission_icon_tapped", {mission_id: id, from: state.folderOpen ? "folder" : "menu", completed: !!(state.missions[id] && state.missions[id].done)});
   // Every mission can always be played again (2026-11-05, per Dan; the temporary "tapping a finished mission clears it" is gone). A game that is already done gives no second badge, points or step for the pilgrim:
   // round 1 of a replay goes straight on to round 2 (see roundOneGrant), and finishing all the rounds goes back to the Main Menu (see grantMission).
+  if(id === "stainedGlass" || id === "faithMatch") preloadMatchTiles();          // (2026-11-19, per Dan) the tiles load and decode while the instruction screen is read, so START MISSION has no "Loading tiles..." flash
   if(GUIDE_MISSIONS.indexOf(id) !== -1){ state.introMission = id; go("missionIntro"); }
   else startMission(id);
 }
@@ -13113,7 +13114,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-19 IT48";
+var APP_BUILD = "2026-11-19 IT49";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
