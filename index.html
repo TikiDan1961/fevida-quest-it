@@ -7805,6 +7805,7 @@ function pbLoseChance(s, kind){
 }
 function pbMiss(i){
   var s = state.session.prayBeads;
+  try { dbgLog("beads r" + (s.round + 1) + ": bead " + (i + 1) + " MISSED, no tap (its beat passed " + Math.round(performance.now() - PB_SHOW_LAG - pbStartAt - pbArrive(s, i)) + " ms ago; last tap " + (pbLastTapAt ? Math.round(performance.now() - pbLastTapAt) + " ms ago" : "none")+ ")"); } catch(e){}
   s.res[i] = 3;
   pbLoseChance(s, "miss");
 }
@@ -7814,7 +7815,7 @@ function pbTap(){
   if(pixAudioStale) pixReviveOnTap();
   var now = performance.now(), touched = pixDownT;
   if(!(touched > 0) || touched > now || now - touched > 400) touched = now;      // no usable touch time
-  if(now - pbLastTapAt < 120) return;                                      // a bounce of the finger is not a second tap
+  if(now - pbLastTapAt < 120){ dbgLog("beads r" + (s.round + 1) + ": a tap was thrown away, only " + Math.round(now - pbLastTapAt) + " ms after the last"); return; }                                      // a bounce of the finger is not a second tap
   var t = touched - PB_SHOW_LAG - pbStartAt;
   if(t < 0) return;                                                        // the round has not started yet
   pbLastTapAt = now;
@@ -7826,8 +7827,9 @@ function pbTap(){
     i = k; dt = dtk; break;
   }
   if(i === -1) return;
-  if(dt < -win.good){ pbLoseChance(s, "early"); return; }                 // too early: the bead is not in the ring yet and stays
+  if(dt < -win.good){ dbgLog("beads r" + (s.round + 1) + ": bead " + (i + 1) + " tap TOO EARLY by " + Math.round(-dt) + " ms (window +-" + Math.round(win.good) + ")"); pbLoseChance(s, "early"); return; }                 // too early: the bead is not in the ring yet and stays
   var perfect = Math.abs(dt) <= win.perfect;
+  dbgLog("beads r" + (s.round + 1) + ": bead " + (i + 1) + (perfect ? " perfect" : " good") + ", tap " + (dt < 0 ? Math.round(-dt) + " ms early" : Math.round(dt) + " ms late") + " (window +-" + Math.round(win.good) + ")");
   s.res[i] = perfect ? 1 : 2;
   s.fb = {k: perfect ? "perfect" : "good", n: (s.fb ? s.fb.n : 0) + 1};
   pbChime(s, i);
@@ -13114,7 +13116,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-19 IT49";
+var APP_BUILD = "2026-11-19 IT50";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
