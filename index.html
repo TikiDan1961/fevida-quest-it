@@ -1534,7 +1534,8 @@ function rotGateEnd(tapped){
   if(!rotGate) return;
   rotGate = false; rotGateScreen = null;
   if(tapped){ rotGateUntil = performance.now() + 450; window.pixRotTapAt = performance.now();
-    window.pixRotTapMissAt = (state.screen === "catchLight" && typeof clFading !== "undefined" && clFading) ? performance.now() : 0; }          // (2026-11-18) the gate ended by a tap while a miss is fading out: Catch the Light's held restart counts that tap as its start (clRestartLevel)
+    window.pixRotTapMissAt = (state.screen === "catchLight" && typeof clFading !== "undefined" && clFading) ? performance.now() : 0;          // (2026-11-18) the gate ended by a tap while a miss is fading out: Catch the Light's held restart counts that tap as its start (clRestartLevel)
+    window.pixRotTapMissJlAt = (state.screen === "jacobLadder" && typeof jl !== "undefined" && jl && (jl.mode === "miss" || jl.mode === "ohno")) ? performance.now() : 0; }          // (2026-11-18, per Dan) the same for Jacob's Ladder: the gate's tap, given during a fall, is the start of the climb after it (jlRespawn)
   var el = document.getElementById("rotGate"); if(el && el.parentNode) el.parentNode.removeChild(el);
   if(!rotHold) document.body.classList.remove("rotPaused");
   dbgLog("pause: " + state.screen + " goes on" + (tapped ? " after the tap" : ""));
@@ -9282,7 +9283,9 @@ function jlMissStep(s, dt){
 // after OH NO!!!!: game over if that was the last chance; else the round starts again from the bottom (2026-10-24, per Dan): Jacob on the first rung, the height indicator empty, a new set of rungs
 function jlRespawn(s){
   if(s.chances <= 0){ s.status = "failed"; saveState(); render(); return; }
-  jlBegin(s, true);                                                          // (the climb starts again at once: no tap needed after a fall)
+  var jlAuto = !!(window.pixRotTapMissJlAt && performance.now() - window.pixRotTapMissJlAt < 8000);          // (2026-11-18, per Dan) the gate's tap, given while he was falling, is the start
+  window.pixRotTapMissJlAt = 0;
+  jlBegin(s, jlAuto);          // (2026-11-18, per Dan) after a fall the game waits for a tap again ("Tap anywhere to start!"); it did not wait before)                                                          // (the climb starts again at once: no tap needed after a fall)
   jlPaintMeter(s);
   saveState(); render();
 }
@@ -11577,9 +11580,14 @@ function hglFit(){
   if(!hgl || hgl.W !== W || hgl.H !== H){
     var bgc = document.createElement("canvas"); bgc.width = W; bgc.height = H;
     var info = hglDraw(bgc, W, H);
+    var hgKeep = hgl ? {round: hgl.round, chances: hgl.chances, mode: hgl.mode, interlude: hgl.interlude} : null;          // (2026-11-18, per Dan) the game that was running, to be kept when only the size is different
     hgl = {W: W, H: H, bg: bgc, g: info.g, flowers: info.flowers, bees: [], plans: [], sel: null, drag: null, particles: [], t: 0, nextSpawn: 1.2, id: 0, last: performance.now(),
       round: 0, mode: "play", chances: HG_CHANCES, flash: 0, need: {}, total: 0, landed: 0, landedBy: {0: 0, 2: 0, 4: 0, 6: 0}, totalBy: {}, lastGone: {0: -99, 2: -99, 4: -99, 6: -99}};
     hglSetRound(0);
+    if(hgKeep){
+      hglSetRound(hgKeep.round); hgl.chances = hgKeep.chances;          // the same round with the chances the player had, laid out for the new size
+      if(hgKeep.mode !== "play"){ hgl.mode = hgKeep.mode; hgl.interlude = hgKeep.interlude; }          // over (TRY AGAIN), complete, or the round-completed message: they stay as they were
+    }
   }
   hglPlaceSigns(); hglPaint(); hglCountPaint();
 }
@@ -13105,7 +13113,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-18 IT45";
+var APP_BUILD = "2026-11-18 IT47";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
