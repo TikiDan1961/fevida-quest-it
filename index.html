@@ -2310,7 +2310,6 @@ function loadState(){
 }
 
 function saveState(){
-  if(window.__resetting) return;          // RESET (Options) is wiping the saved game: nothing may write it back
   var s = JSON.stringify(state);
   try{ localStorage.setItem(STORAGE_KEY, s); }catch(e){ try{ sessionStorage.setItem(STORAGE_KEY, s); }catch(e2){} }
 }
@@ -13119,7 +13118,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-19 IT52";
+var APP_BUILD = "2026-11-19 IT53";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
@@ -13133,7 +13132,6 @@ function screenOptions(){
       optionRow("music", t("musicVolume"), typeof state.volMusic === "number" ? state.volMusic : 60) +
     '</div>' +
     (clearMissionsDue() ? '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();clearMissionsAsk()">' + clearMissionsLabel() + '</button></div>' : '') +
-    '<div class="shareRow optShare"><button class="btn pixBtn ' + (t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '" onpointerdown="pixPressSfx()" onclick="pixClickSfx();resetAllAsk()">RESET</button></div>' +
     '<div class="shareRow optShare">' + shareBtnHtml("app", null, "options", t("shareAppBtn"), t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '</div>' +
     (instCanShow() ? '<div class="optInstall">' + instBtnHtml() + '</div>' : '') +
     '<div class="optPrivacy">' + t("privacyNote") + '</div>' +
@@ -13948,34 +13946,6 @@ function clearMissionsAsk(){
   el.innerHTML = '<div class="pixPaper pixRoundDone"><div class="pixResTitle">' + t("sureTitle") + '</div><p class="pixResBody">' + t(ticketCount() >= 2 ? "sureBody2" : "sureBody1") + '</p>' +
     '<div class="quitBtns">' + pixBtnHtml(t("sureYes"), "clearMissionsGo()").replace("pixBtnSm", t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + pixBtnHtml(t("sureNo"), "clearMissionsNo()", true).replace("pixBtnSm", t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd") + '</div></div>';
   document.body.appendChild(el);
-}
-// TEMPORARY RESET button of the Options screen (2026-11-14, per Dan; see temp_reset_button.py): wipes this browser's saved game and starts the app over from the language screen.
-function resetAllAsk(){
-  if(document.getElementById("resetAskOverlay")) return;
-  var el = document.createElement("div");
-  el.id = "resetAskOverlay"; el.className = "quitOverlay";
-  var sz = t("shareAppBtn").length > 16 ? "pixBtnSm" : "pixBtnMd";
-  el.innerHTML = '<div class="pixPaper pixRoundDone"><div class="pixResTitle">RESET?</div><p class="pixResBody">Erase EVERYTHING saved on this phone (points, badges, tickets, the pilgrim) and start over from the first screen? (Testing button.)</p>' +
-    '<div class="quitBtns">' + pixBtnHtml("YES, RESET", "resetAllGo()").replace("pixBtnSm", sz) + pixBtnHtml("NO", "resetAllNo()", true).replace("pixBtnSm", sz) + '</div></div>';
-  document.body.appendChild(el);
-}
-function resetAllNo(){ var el = document.getElementById("resetAskOverlay"); if(el && el.parentNode) el.parentNode.removeChild(el); }
-function resetAllGo(){
-  window.__resetting = true;
-  try{
-    for(var i = localStorage.length - 1; i >= 0; i--){ var k = localStorage.key(i); if(k && /QuestState/.test(k)) localStorage.removeItem(k); }
-    sessionStorage.clear();
-  }catch(e){}
-  // (2026-11-16, per Dan: on a poor connection the first RESET seemed to do nothing, the Main Menu stayed, and a second RESET worked) the reload waits for the connection (up to ~4 s through the service worker), so a cover says it is working
-  try {
-    var ro = document.createElement("div");
-    ro.id = "resetCover";
-    ro.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:#1D2350;color:#FFC93A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;font:700 26px 'Jersey 10','Pixelify Sans',ui-monospace,monospace;letter-spacing:.06em;";
-    ro.innerHTML = '<div>RESETTING...</div><div id="resetCoverSub" style="font-size:16px;color:#BFD0FF"></div>';
-    document.body.appendChild(ro);
-    setTimeout(function(){ var sub = document.getElementById("resetCoverSub"); if(sub) sub.textContent = "waiting for the connection - please wait, do not tap"; }, 4500);
-  } catch(e){}
-  location.replace(location.pathname);
 }
 function clearMissionsNo(){ var el = document.getElementById("clearAskOverlay"); if(el && el.parentNode) el.parentNode.removeChild(el); }
 function clearMissionsGo(){
