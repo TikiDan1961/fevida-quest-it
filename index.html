@@ -3395,7 +3395,7 @@ function folderHtml(){
   items += COMING_SOON_MISSIONS.map(function(m){
     return appIconHtml({onclick:"comingSoon()", bg:ICON_BG[m.art || m.id], cls:"soon", inner:iconSpr(m.art || m.id), label:t(m.nameKey), tag:t("comingSoon")});
   }).join("");
-  return '<div class="folderOverlay" onclick="closeFolder()">' +
+  return '<div class="folderOverlay">' +
     '<div class="folderPanel" onclick="event.stopPropagation()">' +
       '<button class="folderClose" onpointerdown="pixPressSfx()" onclick="pixClickSfx();closeFolder()" aria-label="Close">X</button>' +
       '<h2 class="folderTitle">' + t("missionsFolder") + '</h2>' +
@@ -13113,7 +13113,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-18 IT47";
+var APP_BUILD = "2026-11-19 IT48";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
