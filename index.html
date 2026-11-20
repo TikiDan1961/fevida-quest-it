@@ -2068,7 +2068,7 @@ var FAITH_FLASH_QUESTIONS = [
   {en:{q:"Which Apostle is known as \"the Rock\" on whom Jesus built his Church?",a:["Peter","Paul","John"]}, es:{q:"Quale Apostolo è conosciuto come «la roccia» su cui Gesù ha costruito la sua Chiesa?",a:["Pietro","Paolo","Giovanni"]}, correct:0},
   {en:{q:"What prayer uses beads to help meditate on the life of Jesus?",a:["The Rosary","The Angelus","The Magnificat"]}, es:{q:"Quale preghiera usa dei grani per aiutare a meditare sulla vita di Gesù?",a:["Il Rosario","L’Angelus","Il Magnificat"]}, correct:0},
   {en:{q:"What is the meaning of the term Lectio Divina?",a:["Divine Prayer","Divine Reading","Bible Study"]}, es:{q:"Qual è il significato dell’espressione Lectio Divina?",a:["Preghiera divina","Lettura Divina","Studio della Bibbia"]}, correct:1},
-  {en:{q:"To whom is the origin of the concept of Lectio Divina attributed?",a:["Guigo II","Saint Benedict","Origen"]}, es:{q:"A chi si attribuisce l’origine del concetto di Lectio Divina?",a:["Guigo II","San Benedetto","Origene"]}, correct:0},
+  {en:{q:"To whom is the origin of the concept of Lectio Divina attributed?",a:["Guigo II","Saint Benedict","Origen"]}, es:{q:"A chi si attribuisce l’origine del concetto di Lectio Divina?",a:["Guigo II","San Benedetto","Origene"]}, correct:1},
   {en:{q:"Who is known as the patron saint of the internet?",a:["Francis of Assisi","Ignatius of Loyola","Carlo Acutis"]}, es:{q:"Chi è conosciuto come il santo patrono di internet?",a:["Francesco d’Assisi","Ignazio di Loyola","Carlo Acutis"]}, correct:2},
   {en:{q:"What is the third source of the Catholic faith along with Scripture and Tradition?",a:["The Magisterium","The philosophy","The law"]}, es:{q:"Qual è la terza fonte della fede cattolica insieme alla Scrittura e alla Tradizione?",a:["Il magistero","La filosofia","Il diritto"]}, correct:0},
   {en:{q:"What is the main symbol of the Church sailing in the world?",a:["The network","The boat","The lighthouse"]}, es:{q:"Qual è il simbolo principale della Chiesa che naviga nel mondo?",a:["La rete","La barca","Il faro"]}, correct:1},
@@ -2085,7 +2085,7 @@ var FAITH_FLASH_QUESTIONS = [
   {en:{q:"During Mass, what is the conversion of the bread and wine into the Body and Blood of Christ called?",a:["Consecration Only","Transubstantiation","Spiritual communion"]}, es:{q:"Durante la Messa, come si chiama la trasformazione del pane e del vino nel Corpo e nel Sangue di Cristo?",a:["Solo consacrazione","Transustanziazione","Comunione spirituale"]}, correct:1},
   {en:{q:"What does the word \"Catholic\" mean when applied to the Church?",a:["Ancient","Apostolic only","Universal"]}, es:{q:"Che cosa significa la parola «cattolica» applicata alla Chiesa?",a:["Antica","Solo apostolica","Universale"]}, correct:2},
   {en:{q:"Which prophet announced that God would give his people a new heart and put a new spirit in them?",a:["Ezekiel","Obadiah","Joel"]}, es:{q:"Quale profeta annunciò che Dio avrebbe dato al suo popolo un cuore nuovo e uno spirito nuovo?",a:["Ezechiele","Abdia","Gioele"]}, correct:0},
-  {en:{q:"What is the name of the part of the Mass in which the Bible readings are proclaimed and heard?",a:["Eucharistic Reading","Farewell rite","Reading from the Word"]}, es:{q:"Come si chiama la parte della Messa in cui si proclamano e si ascoltano le letture bibliche?",a:["Lettura eucaristica","Rito di congedo","Liturgia della Parola"]}, correct:2},
+  {en:{q:"What is the name of the part of the Mass in which the Bible readings are proclaimed and heard?",a:["Liturgy of the Eucharist","Farewell rite","Liturgy of the Word"]}, es:{q:"Come si chiama la parte della Messa in cui si proclamano e si ascoltano le letture bibliche?",a:["Liturgia dell'Eucaristia","Rito di congedo","Liturgia della Parola"]}, correct:2},
   {en:{q:"What solemnity celebrates Mary's entry into heavenly glory body and soul?",a:["The Immaculate Conception","The Assumption","The Annunciation"]}, es:{q:"Quale solennità celebra l’ingresso di Maria nella gloria del cielo in corpo e anima?",a:["L’Immacolata Concezione","L’Assunzione","L’Annunciazione"]}, correct:1},
   {en:{q:"What is the official recognition of a saint by the Church called?",a:["Beatification","Ordination","Canonization"]}, es:{q:"Come si chiama il riconoscimento ufficiale di un santo da parte della Chiesa?",a:["Beatificazione","Ordinazione","Canonizzazione"]}, correct:2},
   {en:{q:"During Lent, what day marks the beginning of this liturgical season?",a:["Ash Wednesday","Palm Sunday","Good Friday"]}, es:{q:"Durante la Quaresima, quale giorno segna l’inizio di questo tempo liturgico?",a:["Mercoledì delle Ceneri","Domenica delle Palme","Venerdì Santo"]}, correct:0},
@@ -13118,7 +13118,7 @@ function setVolume(kind, v){
 function optionPreview(kind){ track("setting_changed", {setting: kind, value: kind === "music" ? state.volMusic : state.volSfx}); if(kind !== "music") pixSfxPlay("tap"); }
 
 // shown at the bottom of Options so it is plain which copy of the game a phone is running (a phone can keep an old one): change it with every push that matters
-var APP_BUILD = "2026-11-19 IT53";
+var APP_BUILD = "2026-11-19 IT54";
 function screenOptions(){
   return '<div class="screen pixHome pixSky pixPassport">' +
     cloudsHtml() +
